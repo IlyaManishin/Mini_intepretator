@@ -29,10 +29,10 @@ typedef enum TokenTypes
     IN_KW,     // in
     PASS_KW,   // pass
     FUNC_KW,   // func == def
-    CLASS_KW,  // class
+    // CLASS_KW,  // class
     IMPORT_KW, // import
     FROM_KW,   // from
-    AS_KW,     // as
+    // AS_KW,     // as
 
     PLUS,           // +
     MINUS,          // -
@@ -74,7 +74,7 @@ typedef struct TToken
     TokenTypes type;
 
     char *start;
-    char *end;
+    char *end; // for ident only
 
 } TToken;
 
@@ -103,6 +103,7 @@ typedef struct TTokenizerError
 typedef struct TTokenizer
 {
     char *buf;
+    char* start;
     char *cur;
     char *curLine;
     int curLineIndex;
