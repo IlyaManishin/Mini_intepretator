@@ -4,9 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../include/tokenizer_api.h"
 #include "tokenizer.h"
 
-#define TOKENS_BUF_SIZE 16
+#define get_tokenizer_error(tokenizer, textMsg) \
+    get_error(textMsg, tokenizer->curLine, tokenizer->curLineIndex, tokenizer->cur)
+
+#define is_pass_symbol(ch) ((ch) == '\r' || (ch) == '\t' || (ch) == ' ')
+#define is_ident_start_symbol(ch) (((ch) > 'a' && (ch) < 'z') || ((ch) > 'A' && (ch) < 'Z') || (ch) == '_')
 
 void delete_tokenizer(TTokenizer *tokenizer)
 {
@@ -36,9 +41,11 @@ TTokenizer *tokenizer_from_file(FILE *file)
     tokenizer->buf = buf;
     tokenizer->cur = buf;
     tokenizer->curLine = buf;
+    tokenizer->curLineIndex = 0;
     tokenizer->end = buf + bufferSize - 1;
 
     tokenizer->state = NEW_LINE_STATE;
+    tokenizer->newIndent = 0;
     tokenizer->curIndent = 0;
 
     tokenizer->tokensBuf = (TToken *)malloc(TOKENS_BUF_SIZE * sizeof(TToken));
@@ -46,6 +53,11 @@ TTokenizer *tokenizer_from_file(FILE *file)
     {
         goto invalid_tokens_buf;
     }
+
+    tokenizer->isError = false;
+    tokenizer->errorType = NONE;
+    tokenizer->errMesg.textMsg = NULL;
+
     return tokenizer;
 
 invalid_tokens_buf:
@@ -55,7 +67,12 @@ invalid_tokens_buf:
     return NULL;
 }
 
-int tgetc(TTokenizer *tokenizer, char *ch)
+static bool is_tokenizer_error(TTokenizer *tokenizer)
+{
+    return tokenizer->isError;
+}
+
+static int tgetc(TTokenizer *tokenizer, char *ch)
 {
     if (tokenizer->cur > tokenizer->end)
     {
@@ -66,23 +83,97 @@ int tgetc(TTokenizer *tokenizer, char *ch)
     return 0;
 }
 
-void tbackc(TTokenizer *tokenizer, char ch)
+static void tbackc(TTokenizer *tokenizer, char ch)
 {
-    tokenizer->cur --;
+    tokenizer->cur--;
     assert(*tokenizer->cur == ch);
 }
 
-int _get_new_line_indent(TTokenizer *tokenizer)
+static TToken make_empty_token()
 {
-    int tabCnt = 0;
-    int whiteSpaceCnt = 0;
+    TToken token;
+    token.type = INVALID;
+    token.start = NULL;
+    token.end = NULL;
+
+    return token;
 }
 
-int _read_token(TTokenizer *tokenizer, TToken *tokDest)
+static TToken make_keyword_token(TTokenizer *tokenizer, TokenTypes type)
+{
+    TToken token;
+    token.type = type;
+    token.start = tokenizer->cur;
+    token.end = tokenizer->cur;
+
+    return token;
+}
+
+static int _get_new_line_indent(TTokenizer *tokenizer)
+{
+    int tabCount = 0;
+    int whiteSpaceCount = 0;
+    char ch;
+    while (tgetc(tokenizer, &ch) != EOF)
+    {
+        if (ch == '\n') // empty line
+        {
+            return tokenizer->newIndent;
+        }
+        if (ch == ' ')
+        {
+            whiteSpaceCount++;
+            if (whiteSpaceCount == WHITESPACE_IN_TAB)
+            {
+                whiteSpaceCount = 0;
+                tabCount++;
+            }
+        }
+        else if (ch == '\t')
+        {
+            tabCount++;
+        }
+        else
+        {
+            tbackc(tokenizer, ch);
+            if (whiteSpaceCount != 0)
+            {
+                tokenizer->errMesg = get_tokenizer_error(tokenizer, "Invalid code intend");
+                return -1;
+            }
+        }
+    }
+}
+
+static TToken read_token(TTokenizer *tokenizer)
 {
     if (tokenizer->state == NEW_LINE_STATE)
     {
-        tokenizer->curIndent = _get_new_line_indent(tokenizer);
-        assert(tokenizer->curIndent != -1);
+        tokenizer->newIndent = _get_new_line_indent(tokenizer);
+        if (is_tokenizer_error(tokenizer))
+            return make_empty_token();
+        tokenizer->state = INSIDE_LINE_STATE;
     }
+
+    if (tokenizer->newIndent < tokenizer->curIndent)
+    {
+        tokenizer->curIndent--;
+        return make_keyword_token(tokenizer, DEDENT);
+    }
+    else if (tokenizer->newIndent > tokenizer->curIndent)
+    {
+        tokenizer->curIndent++;
+        return make_keyword_token(tokenizer, INDENT);
+    }
+
+    char ch = '\0';
+    while (tgetc(tokenizer, &ch) != EOF)
+    {
+        if (is_pass_symbol(ch))
+            continue;
+    }
+    if (ch == '\0')
+        return make_keyword_token(tokenizer, EOF_TOKEN);
+    
+    
 }
