@@ -5,7 +5,7 @@
 
 typedef enum TokenTypes
 {
-    INVALID, 
+    ERROR, //on error
 
     IDENT,
     NUMBER,
@@ -106,8 +106,8 @@ typedef struct TTokenizer
     char *buf;
     char* start;
     char *cur;
-    char *curLine;
-    int curLineIndex;
+    char *curLine; // start of code or after \n 
+    int lineIndex;
     char *end;
 
     TokenizerStates state;
