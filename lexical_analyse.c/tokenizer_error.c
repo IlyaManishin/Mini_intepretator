@@ -5,7 +5,7 @@
 #include "../include/system_tools.h"
 #include "../include/tokenizer_api.h"
 
-TTokenizerError get_error(char *textMsg, char *errLine, int lineIndex, char *cur)
+TTokenizerError make_error(char *textMsg, char *errLine, int lineIndex, char *cur)
 {
     TTokenizerError error;
     error.textMsg = textMsg;

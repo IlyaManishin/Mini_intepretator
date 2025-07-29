@@ -81,7 +81,8 @@ typedef struct TToken
 typedef enum TokenizerStates
 {
     NEW_LINE_STATE,
-    INSIDE_LINE_STATE
+    INSIDE_LINE_STATE,
+    EOF_STATE,
 } TokenizerStates;
 
 typedef enum TokenizerErrors
@@ -119,3 +120,7 @@ typedef struct TTokenizer
     TokenizerErrors errorType;
     TTokenizerError errMesg;
 } TTokenizer;
+
+bool is_tokenizer_error(TTokenizer *tokenizer);
+TTokenizerError make_error(char *textMsg, char *errLine, int lineIndex, char *cur);
+TTokenizerError get_tokenizer_error(TTokenizer *tokenizer);
