@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../include/tokenizer_api.h"
+#include "tokenizer_api.h"
+
 #include "tokenizer.h"
 
 // #define get_tokenizer_err(tokenizer, textMsg) \
