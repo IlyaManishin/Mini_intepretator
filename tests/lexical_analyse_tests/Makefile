@@ -1,7 +1,7 @@
-RESULT := tokenizer_test
+RESULT := main
 SRC_DIR := ../../lexical_analyse
 INCLUDE_DIR := ../../include
-CFLAGS := -Wall -I$(INCLUDE_DIR)
+CFLAGS := -Wall -g -I $(INCLUDE_DIR)
 
 OBJS := tokenizer_error.o tokenizer.o
 
