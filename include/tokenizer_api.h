@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef enum TokenTypes
 {
@@ -121,6 +122,10 @@ typedef struct TTokenizer
     TTokenizerError errMesg;
 } TTokenizer;
 
+TTokenizer *tokenizer_from_file(FILE *file);
+void delete_tokenizer(TTokenizer *tokenizer);
+
+TToken read_token(TTokenizer *tokenizer);
 bool is_tokenizer_error(TTokenizer *tokenizer);
 TTokenizerError make_error(char *textMsg, char *errLine, int lineIndex, char *cur);
 TTokenizerError get_tokenizer_error(TTokenizer *tokenizer);

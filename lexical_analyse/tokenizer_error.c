@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "system_tools.h"
-#include "tokenizer_api.h"
+#include <system_tools.h>
+#include <tokenizer_api.h>
 
 TTokenizerError make_error(char *textMsg, char *errLine, int lineIndex, char *cur)
 {

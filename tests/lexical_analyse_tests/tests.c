@@ -129,7 +129,6 @@ int test2()
 
 int test3()
 {
-    return SUCC;
     TCheckData data[] = {
     {IDENT, "a"},
     {PLUS_ASSIGN, NULL},
@@ -137,16 +136,15 @@ int test3()
     {NEWLINE, NULL},
 
     {IDENT, "a"},
-    {EQ, NULL},
+    {ASSIGN, NULL},
     {NUMBER, "4"},
     {PLUS, NULL},
     {NUMBER, "7"},
     {NEWLINE, NULL},
 
     {IDENT, "c"},
-    {EQ, NULL},
-    {STRING, "boo"},
-    {NEWLINE, NULL}};
+    {ASSIGN, NULL},
+    {STRING, "boo"}};
     int n = sizeof(data) / sizeof(data[0]);
     return base_test(data, n);
 }

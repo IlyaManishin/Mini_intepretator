@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tokenizer_api.h"
+#include <tokenizer_api.h>
 
 #include "tokenizer.h"
 
@@ -18,7 +18,8 @@
 
 void delete_tokenizer(TTokenizer *tokenizer)
 {
-    //!!!
+    free(tokenizer->buf);
+    free(tokenizer->tokensBuf);
     free(tokenizer);
 }
 
@@ -29,7 +30,7 @@ TTokenizer *tokenizer_from_file(FILE *file)
         return NULL;
     }
     fseek(file, 0, SEEK_END);
-    size_t bufferSize = ftell(file);
+    long bufferSize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
     char *buf = (char *)malloc(bufferSize + 1);
@@ -37,9 +38,20 @@ TTokenizer *tokenizer_from_file(FILE *file)
         return NULL;
     fread(buf, 1, bufferSize, file);
 
+    TToken *tokensBuf = (TToken *)malloc(TOKENS_BUF_SIZE * sizeof(TToken));
+    if (tokensBuf == NULL)
+    {
+        free(buf);
+        return NULL;
+    }
+
     TTokenizer *tokenizer = (TTokenizer *)malloc(sizeof(TTokenizer));
     if (tokenizer == NULL)
+    {
+        free(buf);
+        free(tokensBuf);
         return NULL;
+    }
 
     tokenizer->buf = buf;
     tokenizer->cur = buf;
@@ -51,11 +63,7 @@ TTokenizer *tokenizer_from_file(FILE *file)
     tokenizer->newIndent = 0;
     tokenizer->curIndent = 0;
 
-    tokenizer->tokensBuf = (TToken *)malloc(TOKENS_BUF_SIZE * sizeof(TToken));
-    if (tokenizer->tokensBuf == NULL)
-    {
-        goto invalid_tokens_buf;
-    }
+    tokenizer->tokensBuf = tokensBuf;
 
     tokenizer->isError = false;
     tokenizer->errorType = NONE;
@@ -100,6 +108,12 @@ static int tgetc(TTokenizer *tokenizer, char *ch)
         tokenizer->lineIndex++;
         tokenizer->curLine = tokenizer->cur;
     }
+    if (*ch == '\0')
+    {
+        // go to end
+        tokenizer->cur = tokenizer->end;
+        return EOF;
+    }
     return 0;
 }
 
@@ -112,7 +126,7 @@ static char *_get_line_before(TTokenizer *tokenizer)
     {
         if (*cur == '\n')
             return cur + 1;
-        cur --;
+        cur--;
     }
     return tokenizer->buf;
 }
@@ -120,10 +134,10 @@ static char *_get_line_before(TTokenizer *tokenizer)
 static void tbackc(TTokenizer *tokenizer, char ch)
 {
     tokenizer->cur--;
-    if (tokenizer->cur == tokenizer->curLine)
+    if (tokenizer->cur == tokenizer->curLine - 1)
     {
         tokenizer->curLine = _get_line_before(tokenizer);
-        tokenizer->lineIndex --;
+        tokenizer->lineIndex--;
     }
     assert(tokenizer->cur >= tokenizer->buf);
     assert(*tokenizer->cur == ch);
@@ -151,7 +165,7 @@ static bool tcheckc(TTokenizer *tokenizer, char check)
     return true;
 }
 
-static bool lookahead(TTokenizer *tokenizer, char *check)
+static bool lookahead(TTokenizer *tokenizer, const char *check)
 {
     bool result = true;
 
@@ -163,13 +177,13 @@ static bool lookahead(TTokenizer *tokenizer, char *check)
         if (r == EOF || tok_ch != *cur)
         {
             result = false;
-            cur--;
             if (r != EOF)
                 tbackc(tokenizer, tok_ch);
             break;
         }
         cur++;
     }
+    cur--;
     // tgetc(tokenizer, &tok_ch);???
 
     while (cur >= check)
@@ -178,6 +192,16 @@ static bool lookahead(TTokenizer *tokenizer, char *check)
         cur--;
     }
     return result;
+}
+
+static bool is_tokenizer_EOF(TTokenizer *tokenizer)
+{
+    char ch;
+    int r = tgetc(tokenizer, &ch);
+    if (r == EOF)
+        return true;
+    tbackc(tokenizer, ch);
+    return false;
 }
 
 static TToken make_EOF_token()
@@ -228,7 +252,7 @@ static int read_new_line_indent(TTokenizer *tokenizer)
     return whiteSpaceCount;
 }
 
-static bool try_to_tgets(TTokenizer *tokenizer, char *s)
+static bool try_to_tgets(TTokenizer *tokenizer, const char *s)
 {
     bool isValid = false;
 
@@ -257,6 +281,8 @@ static TToken read_keyword_token(TTokenizer *tokenizer)
             type = IF_KW;
         else if (try_to_tgets(tokenizer, "mport"))
             type = IMPORT_KW;
+        else if (try_to_tgets(tokenizer, "n"))
+            type = IN_KW;
         break;
     case 'e':
         if (try_to_tgets(tokenizer, "lse"))
@@ -423,19 +449,25 @@ static TToken _read_two_char_operation_token(TTokenizer *tokenizer, char first, 
     return make_error_token(tokenizer);
 }
 
-static TToken read_operation_token(TTokenizer *tokenizer, char first)
+static TToken read_operation_token(TTokenizer *tokenizer)
 {
-    char second;
-    tgetc(tokenizer, &second);
+    char first, second;
+    tgetc(tokenizer, &first);
+    int r2 = tgetc(tokenizer, &second);
 
-    TToken result = _read_two_char_operation_token(tokenizer, first, second);
-    if (result.type != ERROR)
+    if (r2 != EOF)
     {
-        return result;
+        TToken result = _read_two_char_operation_token(tokenizer, first, second);
+        if (result.type != ERROR)
+        {
+            return result;
+        }
+        tbackc(tokenizer, second);
     }
-    tbackc(tokenizer, second);
 
-    result = _read_one_char_operation_token(tokenizer, first);
+    TToken result = _read_one_char_operation_token(tokenizer, first);
+    if (result.type == ERROR)
+        tbackc(tokenizer, first);
     return result;
 }
 
@@ -502,12 +534,15 @@ static TToken read_number(TTokenizer *tokenizer)
     return make_token(tokenizer, NUMBER);
 }
 
-static TToken read_string_token(TTokenizer *tokenizer, char leftEdge)
+static TToken read_string_token(TTokenizer *tokenizer)
 {
+    char leftEdge;
+    tgetc(tokenizer, &leftEdge);
+    
     char ch;
     while (tgetc(tokenizer, &ch) != EOF)
     {
-        if (ch == leftEdge)
+        if (ch == leftEdge) // right edge == left edge
         {
             tbackc(tokenizer, ch);
             TToken stringToken = make_token(tokenizer, STRING);
@@ -538,11 +573,15 @@ static void read_pass_symbols(TTokenizer *tokenizer)
     }
 }
 
-static TToken read_token(TTokenizer *tokenizer)
+TToken read_token(TTokenizer *tokenizer)
 {
     if (is_tokenizer_error(tokenizer))
     {
         return make_error_token(tokenizer);
+    }
+    if (tokenizer->state == EOF_STATE && tokenizer->curIndent == 0)
+    {
+        return make_EOF_token();
     }
 
     int newIndendWhitespaces;
@@ -556,15 +595,15 @@ restart:
         r = tgetc(tokenizer, &ch);
         if (r == EOF)
         {
-            tokenizer->state = EOF_STATE;
-            tokenizer->newIndent = 0;
+            goto EOF_set;
         }
-        else if (ch == '\n') // empty line
+        if (ch == '\n') // empty line
         {
             goto restart;
         }
         else
         {
+            tbackc(tokenizer, ch);
             if (newIndendWhitespaces % WHITESPACE_IN_TAB != 0)
             {
                 set_tokenizer_error(tokenizer, tokenizer->cur, "Invalid line indend");
@@ -574,6 +613,15 @@ restart:
             tokenizer->state = INSIDE_LINE_STATE;
         }
     }
+    read_pass_symbols(tokenizer);
+
+EOF_set:
+    if (is_tokenizer_EOF(tokenizer) && tokenizer->state != EOF_STATE)
+    {
+        tokenizer->state = EOF_STATE;
+        tokenizer->newIndent = 0;
+    }
+
     tokenizer->start = tokenizer->cur;
     if (tokenizer->newIndent < tokenizer->curIndent)
     {
@@ -589,14 +637,16 @@ restart:
     if (tokenizer->state == EOF_STATE)
         return make_EOF_token();
 
-    read_pass_symbols(tokenizer);
-
     tokenizer->start = tokenizer->cur;
+
     r = tgetc(tokenizer, &ch);
     if (r == EOF || ch == '\0')
         return make_EOF_token();
     if (ch == '\n')
+    {
+        tokenizer->state = NEW_LINE_STATE;
         return make_token(tokenizer, NEWLINE);
+    }
     tbackc(tokenizer, ch);
 
     if (is_ident_or_kw_start_symbol(ch))
@@ -616,14 +666,13 @@ restart:
     }
     if (is_string_start_symbol(ch))
     {
-        TToken stringToken = read_string_token(tokenizer, ch);
+        TToken stringToken = read_string_token(tokenizer);
         return stringToken;
     }
 
-    TToken opToken = read_operation_token(tokenizer, ch);
+    TToken opToken = read_operation_token(tokenizer);
     if (opToken.type != ERROR)
         return opToken;
-    tbackc(tokenizer, ch);
 
     set_tokenizer_error(tokenizer, tokenizer->cur, "Unexpected symbol");
     return make_error_token(tokenizer);
