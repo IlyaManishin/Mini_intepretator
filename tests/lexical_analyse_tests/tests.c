@@ -16,6 +16,7 @@ typedef struct TCheckData
 } TCheckData;
 
 static int testIndex = 1;
+static int withValidErrorsPrint = true;
 
 char *get_token_string(TToken token)
 {
@@ -33,6 +34,14 @@ char *get_token_string(TToken token)
 int check_token(TTokenizer *tok, int index, TokenTypes check, const char *checkName)
 {
     TToken token = get_token(tok);
+    if (is_tokenizer_error(tok))
+    {
+        if (check != ERROR || withValidErrorsPrint)
+        {
+            tokenizer_print_error(tok);
+        }
+        pass_tokenizer_error(tok);
+    }
     if (token.type != check)
     {
         printf("(%d) Incorrect type: %d. Expected: %d\n", index, token.type, check);
@@ -132,21 +141,54 @@ int test2()
 int test3()
 {
     TCheckData data[] = {
-    {IDENT, "a"},
-    {PLUS_ASSIGN, NULL},
-    {IDENT, "b"},
-    {NEWLINE, NULL},
+        {IDENT, "a"},
+        {PLUS_ASSIGN, NULL},
+        {IDENT, "b"},
+        {NEWLINE, NULL},
 
-    {IDENT, "a"},
-    {ASSIGN, NULL},
-    {NUMBER, "4"},
-    {PLUS, NULL},
-    {NUMBER, "7"},
-    {NEWLINE, NULL},
+        {IDENT, "a"},
+        {ASSIGN, NULL},
+        {NUMBER, "4"},
+        {PLUS, NULL},
+        {NUMBER, "7"},
+        {NEWLINE, NULL},
 
-    {IDENT, "c"},
-    {ASSIGN, NULL},
-    {STRING, "boo"}};
+        {IDENT, "c"},
+        {ASSIGN, NULL},
+        {STRING, "boo"}};
+    int n = sizeof(data) / sizeof(data[0]);
+    return base_test(data, n);
+}
+
+int test4()
+{
+    // strings test
+    TCheckData data[] = {
+        {IDENT, "a"},
+        {ASSIGN, NULL},
+        {STRING, "\"\\\\\\\"\\\\"}, // строка: "\\\"\\"
+        {NEWLINE, NULL},
+
+        {IDENT, "b"},
+        {ASSIGN, NULL},
+        {STRING, "foo\"boo\"foo"},
+    };
+    int n = sizeof(data) / sizeof(data[0]);
+    return base_test(data, n);
+}
+
+int test5()
+{
+    TCheckData data[] = {
+        {IDENT, "a"},
+        {ASSIGN, NULL},
+        {ERROR, NULL},
+        {NEWLINE, NULL},
+
+        {IDENT, "b"},
+        {ASSIGN, NULL},
+        {ERROR, NULL},
+    };
     int n = sizeof(data) / sizeof(data[0]);
     return base_test(data, n);
 }
@@ -156,11 +198,11 @@ int run_test(int (*test)())
     int result = test();
     if (result)
     {
-        printf("%d) Test%d : Success\n", testIndex, testIndex);
+        printf("%d) TEST%d : Success\n", testIndex, testIndex);
     }
     else
     {
-        printf("%d) Test%d : ERROR\n", testIndex, testIndex);
+        printf("%d) TEST%d : ERROR\n", testIndex, testIndex);
     }
     printf("_______________________________\n");
     testIndex++;
@@ -172,5 +214,8 @@ int main()
     passedCount += run_test(test1);
     passedCount += run_test(test2);
     passedCount += run_test(test3);
+    passedCount += run_test(test4);
+    passedCount += run_test(test5);
+
     printf("PASSED: %d/%d\n", passedCount, testIndex - 1);
 }

@@ -67,7 +67,6 @@ TTokenizer *tokenizer_from_file(FILE *file)
     tokenizer->tokensBuf = tokBuffer;
 
     tokenizer->isError = false;
-    tokenizer->errorType = NONE;
     tokenizer->errMesg.textMsg = NULL;
 
     return tokenizer;
@@ -80,7 +79,7 @@ bool is_tokenizer_error(TTokenizer *tokenizer)
 
 static void set_pos_tokenizer_error(TTokenizer *tokenizer, char *errPos, char *textMsg)
 {
-    tokenizer->errMesg = make_pos_error(textMsg, tokenizer->curLine, tokenizer->lineIndex, errPos);
+    tokenizer->errMesg = make_pos_error(textMsg, tokenizer->curLine, tokenizer->lineIndex, errPos, tokenizer->end);
     tokenizer->isError = true;
 }
 
@@ -88,6 +87,11 @@ static void set_base_tokenizer_error(TTokenizer *tokenizer, char *textMsg)
 {
     tokenizer->errMesg = make_base_error(textMsg);
     tokenizer->isError = true;
+}
+
+void pass_tokenizer_error(TTokenizer *tokenizer)
+{
+    tokenizer->isError = false;
 }
 
 TTokenizerError get_tokenizer_error(TTokenizer *tokenizer)
@@ -111,8 +115,7 @@ static int tgetc(TTokenizer *tokenizer, char *ch)
     }
     if (*ch == '\0')
     {
-        // go to end
-        tokenizer->cur = tokenizer->end;
+        // tokenizer->cur = tokenizer->end;
         return EOF;
     }
     return 0;
@@ -539,24 +542,39 @@ static TToken read_string_token(TTokenizer *tokenizer)
 {
     char leftEdge;
     tgetc(tokenizer, &leftEdge);
-    
+
+    bool isEscaped = false;
     char ch;
     while (tgetc(tokenizer, &ch) != EOF)
     {
-        if (ch == leftEdge) // right edge == left edge
+        if (ch == '\n')
+        {
+            tbackc(tokenizer, ch);
+            goto unclosed_string_error;
+        }
+        if (ch == leftEdge && !isEscaped) // right edge == left edge but not \"
         {
             tbackc(tokenizer, ch);
             TToken stringToken = make_token(tokenizer, STRING);
             tgetc(tokenizer, &ch);
             return stringToken;
         }
-        else if (is_string_start_symbol(ch))
+        // else if (is_string_start_symbol(ch))
+        // {
+        //     set_pos_tokenizer_error(tokenizer, tokenizer->cur - 1, "Invalid symbol inside string");
+        //     return make_error_token(tokenizer);
+        // }
+        if (ch == '\\')
         {
-            set_pos_tokenizer_error(tokenizer, tokenizer->cur, "Invalid symbol inside string");
-            return make_error_token(tokenizer);
+            isEscaped = !isEscaped;
+        }
+        else
+        {
+            isEscaped = false;
         }
     }
-    set_pos_tokenizer_error(tokenizer, tokenizer->cur, "Unclosed string given");
+unclosed_string_error:
+    set_pos_tokenizer_error(tokenizer, tokenizer->cur - 1, "Unclosed string given");
     TToken result = make_error_token(tokenizer);
     return result;
 }
@@ -637,7 +655,6 @@ EOF_set:
     if (tokenizer->state == EOF_STATE)
         return make_EOF_token();
 
-        
     tokenizer->start = tokenizer->cur;
     r = tgetc(tokenizer, &ch);
     // if (r == EOF || ch == '\0')

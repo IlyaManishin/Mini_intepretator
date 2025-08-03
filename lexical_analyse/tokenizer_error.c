@@ -5,7 +5,7 @@
 #include <system_tools.h>
 #include <tokenizer_api.h>
 
-TTokenizerError make_pos_error(char *textMsg, char *errLine, int lineIndex, char *cur)
+TTokenizerError make_pos_error(char *textMsg, char *errLine, int lineIndex, char *cur, char *end)
 {
     TTokenizerError error;
     error.textMsg = textMsg;
@@ -14,7 +14,7 @@ TTokenizerError make_pos_error(char *textMsg, char *errLine, int lineIndex, char
     error.errLine = errLine;
     error.errLineIndex = lineIndex;
     error.errColumn = cur - errLine;
-
+    error.end = end;
     return error;
 }
 
@@ -23,8 +23,19 @@ TTokenizerError make_base_error(char *textMsg)
     TTokenizerError error;
     error.textMsg = textMsg;
     error.withPos = false;
-    
+
     return error;
+}
+
+static void print_error_line(char *errLine, char* end)
+{
+    while (*errLine != '\n' &&
+           *errLine != '\0' &&
+           errLine < end)
+    {
+        printf("%c", *errLine++);
+    }
+    printf("\n");
 }
 
 void tokenizer_print_error(TTokenizer *tokenizer)
@@ -38,6 +49,7 @@ void tokenizer_print_error(TTokenizer *tokenizer)
         return;
 
     int line_pointer_offset = printf("%d line: ", error.errLineIndex + 1);
+    print_error_line(error.errLine, error.end);
     int pointer_offset = line_pointer_offset + error.errColumn;
-    printf("%*c^\n", pointer_offset, ' ');
+    printf("%*c^\n\n", pointer_offset, ' ');
 }
