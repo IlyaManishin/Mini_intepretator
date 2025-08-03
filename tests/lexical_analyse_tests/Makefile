@@ -3,7 +3,7 @@ SRC_DIR := ../../lexical_analyse
 INCLUDE_DIR := ../../include
 CFLAGS := -Wall -g -I $(INCLUDE_DIR)
 
-OBJS := tokenizer_error.o tokenizer.o
+OBJS := tokenizer_error.o tokenizer.o token_buffer.o
 
 TESTS_FILE := tests.c
 TESTS_OBJ := ${TESTS_FILE:.c=.o}
@@ -15,6 +15,10 @@ tokenizer_error.o: ${SRC_DIR}/tokenizer_error.c $(wildcard $(INCLUDE_DIR)/*.h)
 
 tokenizer.o: ${SRC_DIR}/tokenizer.c $(wildcard $(INCLUDE_DIR)/*.h)
 	gcc $(CFLAGS) -c $< -o $@
+
+token_buffer.o: ${SRC_DIR}/token_buffer.c ${SRC_DIR}/token_buffer.h $(wildcard $(INCLUDE_DIR)/*.h)
+	gcc $(CFLAGS) -c $< -o $@
+
 
 ${TESTS_OBJ}: ${TESTS_FILE} $(wildcard $(INCLUDE_DIR)/*.h)
 	gcc ${CFLAGS} -c $< -o $@

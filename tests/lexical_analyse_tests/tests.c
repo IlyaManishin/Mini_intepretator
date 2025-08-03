@@ -32,7 +32,7 @@ char *get_token_string(TToken token)
 
 int check_token(TTokenizer *tok, int index, TokenTypes check, const char *checkName)
 {
-    TToken token = read_token(tok);
+    TToken token = get_token(tok);
     if (token.type != check)
     {
         printf("(%d) Incorrect type: %d. Expected: %d\n", index, token.type, check);
@@ -54,6 +54,7 @@ int check_token(TTokenizer *tok, int index, TokenTypes check, const char *checkN
         free(tokenStr);
         return res == 0 ? SUCC : ERR;
     }
+    return SUCC;
 }
 
 int base_test(const TCheckData data[], int n)
@@ -76,6 +77,7 @@ int base_test(const TCheckData data[], int n)
     }
     if (check_token(tokenizer, 0, EOF_TOKEN, NULL) == ERR)
         result = ERR;
+    delete_tokenizer(tokenizer);
     fclose(file);
     return result;
 }

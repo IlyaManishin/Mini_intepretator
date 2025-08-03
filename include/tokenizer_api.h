@@ -102,6 +102,13 @@ typedef struct TTokenizerError
     int errColumn;
 } TTokenizerError;
 
+typedef struct TTokBuffer
+{
+    TToken *data;
+    int length;
+    int capacity;
+} TTokBuffer;
+
 typedef struct TTokenizer
 {
     char *buf;
@@ -115,7 +122,7 @@ typedef struct TTokenizer
     int curIndent;
     int newIndent;
 
-    TToken *tokensBuf;
+    TTokBuffer* tokensBuf;
 
     bool isError;
     TokenizerErrors errorType;
@@ -125,7 +132,7 @@ typedef struct TTokenizer
 TTokenizer *tokenizer_from_file(FILE *file);
 void delete_tokenizer(TTokenizer *tokenizer);
 
-TToken read_token(TTokenizer *tokenizer);
+TToken get_token(TTokenizer *tokenizer);
 bool is_tokenizer_error(TTokenizer *tokenizer);
 TTokenizerError make_error(char *textMsg, char *errLine, int lineIndex, char *cur);
 TTokenizerError get_tokenizer_error(TTokenizer *tokenizer);

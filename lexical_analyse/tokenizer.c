@@ -6,6 +6,7 @@
 
 #include <tokenizer_api.h>
 
+#include "token_buffer.h"
 #include "tokenizer.h"
 
 // #define get_tokenizer_err(tokenizer, textMsg) \
@@ -38,8 +39,8 @@ TTokenizer *tokenizer_from_file(FILE *file)
         return NULL;
     fread(buf, 1, bufferSize, file);
 
-    TToken *tokensBuf = (TToken *)malloc(TOKENS_BUF_SIZE * sizeof(TToken));
-    if (tokensBuf == NULL)
+    TTokBuffer *tokBuffer = get_token_buffer();
+    if (tokBuffer == NULL)
     {
         free(buf);
         return NULL;
@@ -49,7 +50,7 @@ TTokenizer *tokenizer_from_file(FILE *file)
     if (tokenizer == NULL)
     {
         free(buf);
-        free(tokensBuf);
+        delete_token_buffer(tokBuffer);
         return NULL;
     }
 
@@ -63,7 +64,7 @@ TTokenizer *tokenizer_from_file(FILE *file)
     tokenizer->newIndent = 0;
     tokenizer->curIndent = 0;
 
-    tokenizer->tokensBuf = tokensBuf;
+    tokenizer->tokensBuf = tokBuffer;
 
     tokenizer->isError = false;
     tokenizer->errorType = NONE;
@@ -201,7 +202,7 @@ static bool is_tokenizer_EOF(TTokenizer *tokenizer)
     if (r == EOF)
         return true;
     tbackc(tokenizer, ch);
-    return false;
+    return ch == '\0' ? true : false;
 }
 
 static TToken make_EOF_token()
@@ -538,7 +539,7 @@ static TToken read_string_token(TTokenizer *tokenizer)
 {
     char leftEdge;
     tgetc(tokenizer, &leftEdge);
-    
+
     char ch;
     while (tgetc(tokenizer, &ch) != EOF)
     {
@@ -573,7 +574,7 @@ static void read_pass_symbols(TTokenizer *tokenizer)
     }
 }
 
-TToken read_token(TTokenizer *tokenizer)
+static TToken read_token(TTokenizer *tokenizer)
 {
     if (is_tokenizer_error(tokenizer))
     {
@@ -640,8 +641,8 @@ EOF_set:
     tokenizer->start = tokenizer->cur;
 
     r = tgetc(tokenizer, &ch);
-    if (r == EOF || ch == '\0')
-        return make_EOF_token();
+    // if (r == EOF || ch == '\0')
+    //     return make_EOF_token();
     if (ch == '\n')
     {
         tokenizer->state = NEW_LINE_STATE;
@@ -676,4 +677,13 @@ EOF_set:
 
     set_tokenizer_error(tokenizer, tokenizer->cur, "Unexpected symbol");
     return make_error_token(tokenizer);
+}
+
+TToken get_token(TTokenizer *tokenizer)
+{
+    if (get_token_buffer_length(tokenizer->tokensBuf) == 0)
+    {
+        return read_token(tokenizer);
+    }
+    return pop_token_from_buffer(tokenizer->tokensBuf);
 }
