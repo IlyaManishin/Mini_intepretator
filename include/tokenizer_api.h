@@ -97,6 +97,7 @@ typedef struct TTokenizerError
 {
     char *textMsg;
 
+    bool withPos;
     char *errLine;
     int errLineIndex;
     int errColumn;
@@ -133,6 +134,9 @@ TTokenizer *tokenizer_from_file(FILE *file);
 void delete_tokenizer(TTokenizer *tokenizer);
 
 TToken get_token(TTokenizer *tokenizer);
+void back_token(TTokenizer *tokenizer, TToken token);
+
 bool is_tokenizer_error(TTokenizer *tokenizer);
-TTokenizerError make_error(char *textMsg, char *errLine, int lineIndex, char *cur);
+TTokenizerError make_pos_error(char *textMsg, char *errLine, int lineIndex, char *cur);
+TTokenizerError make_base_error(char *textMsg);
 TTokenizerError get_tokenizer_error(TTokenizer *tokenizer);
