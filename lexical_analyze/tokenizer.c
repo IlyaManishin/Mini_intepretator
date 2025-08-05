@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <system_tools.h>
 #include <tokenizer_api.h>
 
 #include "token_buffer.h"
@@ -19,46 +20,31 @@
 
 void delete_tokenizer(TTokenizer *tokenizer)
 {
-    free(tokenizer->buf);
     free(tokenizer->tokensBuf);
     free(tokenizer);
 }
 
-TTokenizer *tokenizer_from_file(FILE *file)
+TTokenizer *tokenizer_from_str(char *str, size_t strSize)
 {
-    if (file == NULL)
-    {
-        return NULL;
-    }
-    fseek(file, 0, SEEK_END);
-    long bufferSize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char *buf = (char *)malloc(bufferSize + 1);
-    if (buf == NULL)
-        return NULL;
-    fread(buf, 1, bufferSize, file);
+    assert(str != NULL);
 
     TTokBuffer *tokBuffer = get_token_buffer();
     if (tokBuffer == NULL)
-    {
-        free(buf);
         return NULL;
-    }
+
 
     TTokenizer *tokenizer = (TTokenizer *)malloc(sizeof(TTokenizer));
     if (tokenizer == NULL)
     {
-        free(buf);
         delete_token_buffer(tokBuffer);
         return NULL;
     }
 
-    tokenizer->buf = buf;
-    tokenizer->cur = buf;
-    tokenizer->curLine = buf;
+    tokenizer->start = str;
+    tokenizer->cur = str;
+    tokenizer->curLine = str;
     tokenizer->lineIndex = 0;
-    tokenizer->end = buf + bufferSize;
+    tokenizer->end = str + strSize;
 
     tokenizer->state = NEW_LINE_STATE;
     tokenizer->newIndent = 0;
@@ -126,13 +112,13 @@ static char *_get_line_before(TTokenizer *tokenizer)
     assert(tokenizer->lineIndex != 0);
 
     char *cur = tokenizer->cur - 1;
-    while (cur >= tokenizer->buf)
+    while (cur >= tokenizer->start)
     {
         if (*cur == '\n')
             return cur + 1;
         cur--;
     }
-    return tokenizer->buf;
+    return tokenizer->start;
 }
 
 static void tbackc(TTokenizer *tokenizer, char ch)
@@ -143,7 +129,7 @@ static void tbackc(TTokenizer *tokenizer, char ch)
         tokenizer->curLine = _get_line_before(tokenizer);
         tokenizer->lineIndex--;
     }
-    assert(tokenizer->cur >= tokenizer->buf);
+    assert(tokenizer->cur >= tokenizer->start);
     assert(*tokenizer->cur == ch);
 }
 

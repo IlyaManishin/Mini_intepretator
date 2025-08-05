@@ -1,11 +1,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
+#include <system_tools.h>
 #include <tokenizer_api.h>
 
 #define PATH_MAX 128
-#define STRNCMP_MAX 1024
 #define SUCC 1
 #define ERR 0
 
@@ -73,8 +74,10 @@ int base_test(const TCheckData data[], int n)
     char filePath[PATH_MAX];
     snprintf(filePath, PATH_MAX, "test_files/test%d.txt", testIndex);
     FILE *file = fopen(filePath, "r");
+    TFileData fileData = read_file_data(file);
+    assert(fileData.data != NULL);
 
-    TTokenizer *tokenizer = tokenizer_from_file(file);
+    TTokenizer *tokenizer = tokenizer_from_str(fileData.data, fileData.dataSize);
     for (int i = 0; i < n; i++)
     {
         int r = check_token(tokenizer, i, data[i].check, data[i].str);
@@ -86,7 +89,9 @@ int base_test(const TCheckData data[], int n)
     }
     if (check_token(tokenizer, 0, EOF_TOKEN, NULL) == ERR)
         result = ERR;
+
     delete_tokenizer(tokenizer);
+    delete_file_data(fileData);
     fclose(file);
     return result;
 }

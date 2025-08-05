@@ -106,7 +106,6 @@ typedef struct TTokBuffer
 
 typedef struct TTokenizer
 {
-    char *buf;
     char* start;
     char *cur;
     char *curLine; // start of code or after \n 
@@ -123,7 +122,7 @@ typedef struct TTokenizer
     TTokenizerError errMesg;
 } TTokenizer;
 
-TTokenizer *tokenizer_from_file(FILE *file);
+TTokenizer *tokenizer_from_str(char *data, size_t dataSize);
 void delete_tokenizer(TTokenizer *tokenizer);
 
 TToken get_token(TTokenizer *tokenizer);

@@ -5,7 +5,7 @@
 #include <system_tools.h>
 #include <tokenizer_api.h>
 
-TTokenizerError make_pos_error(char *textMsg, char *errLine, int lineIndex, char *cur, char *end)
+TTokenizerError make_pos_error(char *textMsg,char *errLine, int lineIndex, char *cur, char *end)
 {
     TTokenizerError error;
     error.textMsg = textMsg;
@@ -27,7 +27,7 @@ TTokenizerError make_base_error(char *textMsg)
     return error;
 }
 
-static void print_error_line(char *errLine, char* end)
+static void print_error_line(const char *errLine, const char* end)
 {
     while (*errLine != '\n' &&
            *errLine != '\0' &&
