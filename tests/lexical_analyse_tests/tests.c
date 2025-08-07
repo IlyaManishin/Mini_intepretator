@@ -1,10 +1,13 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
+#include <ast_parser_api.h>
+#include <parser_errors.h>
 #include <system_tools.h>
-#include <tokenizer_api.h>
+
+#include "../../ast_parser/lexical_analyze/tokenizer_api.h"
 
 #define PATH_MAX 128
 #define SUCC 1
@@ -39,7 +42,11 @@ int check_token(TTokenizer *tok, int index, TokenTypes check, const char *checkN
     {
         if (check != ERROR || withValidErrorsPrint)
         {
-            tokenizer_print_error(tok);
+            TTokenizerError error = get_tokenizer_error(tok);
+            if (error.withPos)
+                print_error_with_pos(error.textMsg, error.pos);
+            else
+                print_error_msg(error.textMsg);
         }
         pass_tokenizer_error(tok);
     }

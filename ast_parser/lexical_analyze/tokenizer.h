@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../include/tokenizer_api.h"
+#include "tokenizer_api.h"
 
 typedef enum TokenizerSettings
 {

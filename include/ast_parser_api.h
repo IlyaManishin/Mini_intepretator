@@ -4,13 +4,28 @@
 #include <stdio.h>
 
 #include <system_tools.h>
-#include <tokenizer_api.h>
+#include <parser_errors.h>
 
-typedef struct TAstParser
+typedef struct TTokenizerError
 {
-    TFileData fileData;
-    
-    TTokenizer *tokenizer;
-    bool printAllTokenErrors;
-} TAstParser;
+    char *textMsg;
+
+    bool withPos;
+    TErrorBufferPos pos;
+} TTokenizerError;
+
+typedef struct TAstParserError
+{
+    char *textMsg;
+    TErrorBufferPos pos;
+    //???
+} TAstParserError;
+
+
+
+typedef struct TAstParserResp{
+
+} TAstParserResp;
+
+
 

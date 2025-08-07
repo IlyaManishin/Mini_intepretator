@@ -3,7 +3,9 @@
 
 #include <ast_parser_api.h>
 #include <system_tools.h>
-#include <tokenizer_api.h>
+
+#include "lexical_analyze/tokenizer_api.h"
+#include "ast.h"
 
 void delete_ast_parser(TAstParser *parser)
 {
@@ -12,7 +14,7 @@ void delete_ast_parser(TAstParser *parser)
     free(parser);
 }
 
-TAstParser *ast_parser_from_file(FILE *scriptFile, bool printAllTokenErrors)
+TAstParser *ast_parser_from_file(FILE *scriptFile, bool passTokenizerWarnings)
 {
     TFileData fileData = read_file_data(scriptFile);
     if (fileData.data == NULL || fileData.dataSize == 0)
@@ -24,7 +26,7 @@ TAstParser *ast_parser_from_file(FILE *scriptFile, bool printAllTokenErrors)
     TAstParser *parser = (TAstParser *)malloc(sizeof(TAstParser));
     parser->fileData = fileData;
     parser->tokenizer = tokenizer;
-    parser->printAllTokenErrors = printAllTokenErrors;
+    parser->passTokenizerWarnings = passTokenizerWarnings;
 
     return parser;
 }

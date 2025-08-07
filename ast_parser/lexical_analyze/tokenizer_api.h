@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <ast_parser_api.h>
+
 typedef enum TokenTypes
 {
     ERROR, //on error
@@ -86,16 +88,6 @@ typedef enum TokenizerStates
     EOF_STATE,
 } TokenizerStates;
 
-typedef struct TTokenizerError
-{
-    char *textMsg;
-
-    bool withPos;
-    char *errLine;
-    int errLineIndex;
-    int errColumn;
-    char *end;
-} TTokenizerError;
 
 typedef struct TTokBuffer
 {
@@ -129,7 +121,7 @@ TToken get_token(TTokenizer *tokenizer);
 void back_token(TTokenizer *tokenizer, TToken token);
 
 bool is_tokenizer_error(TTokenizer *tokenizer);
-TTokenizerError make_pos_error(char *textMsg, char *errLine, int lineIndex, char *cur, char *end);
+TTokenizerError make_pos_error_by_cur(char *textMsg, char *errLine, int lineIndex, char *cur, char *end);
 TTokenizerError make_base_error(char *textMsg);
 TTokenizerError get_tokenizer_error(TTokenizer *tokenizer);
 void pass_tokenizer_error(TTokenizer *tokenizer);

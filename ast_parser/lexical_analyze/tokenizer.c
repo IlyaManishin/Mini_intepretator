@@ -5,13 +5,13 @@
 #include <string.h>
 
 #include <system_tools.h>
-#include <tokenizer_api.h>
 
+#include "tokenizer_api.h"
 #include "token_buffer.h"
 #include "tokenizer.h"
 
 // #define get_tokenizer_err(tokenizer, textMsg) \
-//     make_pos_error(textMsg, tokenizer->curLine, tokenizer->curLineIndex, tokenizer->cur)
+//     make_pos_error_by_cur(textMsg, tokenizer->curLine, tokenizer->curLineIndex, tokenizer->cur)
 
 #define is_pass_symbol(ch) ((ch) == '\r' || (ch) == '\t' || (ch) == ' ')
 #define is_ident_or_kw_start_symbol(ch) (((ch) >= 'a' && (ch) <= 'z') || ((ch) >= 'A' && (ch) <= 'Z') || (ch) == '_')
@@ -65,7 +65,7 @@ bool is_tokenizer_error(TTokenizer *tokenizer)
 
 static void set_pos_tokenizer_error(TTokenizer *tokenizer, char *errPos, char *textMsg)
 {
-    tokenizer->errMesg = make_pos_error(textMsg, tokenizer->curLine, tokenizer->lineIndex, errPos, tokenizer->end);
+    tokenizer->errMesg = make_pos_error_by_cur(textMsg, tokenizer->curLine, tokenizer->lineIndex, errPos, tokenizer->end);
     tokenizer->isError = true;
 }
 
