@@ -24,18 +24,18 @@ void print_error_msg(char *textMsg)
 void print_error_with_pos(char *textMsg, TErrorBufferPos pos)
 {
     print_error_msg(textMsg);
-    
+
     int line_pointer_offset = printf("%d line: ", pos.errLineIndex + 1);
     print_error_line(pos.errLineStart, pos.bufferEnd);
     int pointer_offset = line_pointer_offset + (pos.errPos - pos.errLineStart);
     printf("%*c^\n\n", pointer_offset, ' ');
 }
 
-TErrorBufferPos get_buffer_error_pos(char *errLineStart, char *errPos, int errLineIndex, char *bufferEnd)
+TErrorBufferPos get_buffer_error_pos(char *errPos, char *errLineStart, int errLineIndex, char *bufferEnd)
 {
     TErrorBufferPos pos;
-    pos.errLineStart = errLineIndex;
     pos.errPos = errPos;
+    pos.errLineStart = errLineStart;
     pos.errLineIndex = errLineIndex;
     pos.bufferEnd = bufferEnd;
 

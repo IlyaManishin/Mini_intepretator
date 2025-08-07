@@ -88,7 +88,6 @@ typedef enum TokenizerStates
     EOF_STATE,
 } TokenizerStates;
 
-
 typedef struct TTokBuffer
 {
     TToken *data;
@@ -111,7 +110,7 @@ typedef struct TTokenizer
     TTokBuffer* tokensBuf;
 
     bool isError;
-    TTokenizerError errMesg;
+    TTokenizerError tokError;
 } TTokenizer;
 
 TTokenizer *tokenizer_from_str(char *data, size_t dataSize);
@@ -121,8 +120,5 @@ TToken get_token(TTokenizer *tokenizer);
 void back_token(TTokenizer *tokenizer, TToken token);
 
 bool is_tokenizer_error(TTokenizer *tokenizer);
-TTokenizerError make_pos_error_by_cur(char *textMsg, char *errLine, int lineIndex, char *cur, char *end);
-TTokenizerError make_base_error(char *textMsg);
 TTokenizerError get_tokenizer_error(TTokenizer *tokenizer);
 void pass_tokenizer_error(TTokenizer *tokenizer);
-void tokenizer_print_error(TTokenizer *tokenizer);

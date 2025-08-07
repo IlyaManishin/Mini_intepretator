@@ -6,12 +6,12 @@
 
 #include <system_tools.h>
 
-#include "tokenizer_api.h"
 #include "token_buffer.h"
-#include "tokenizer.h"
+#include "tokenizer_api.h"
+#include "tokenizer_settings.h"
 
 // #define get_tokenizer_err(tokenizer, textMsg) \
-//     make_pos_error_by_cur(textMsg, tokenizer->curLine, tokenizer->curLineIndex, tokenizer->cur)
+//     get_error_pos_by_tok(textMsg, tokenizer->curLine, tokenizer->curLineIndex, tokenizer->cur)
 
 #define is_pass_symbol(ch) ((ch) == '\r' || (ch) == '\t' || (ch) == ' ')
 #define is_ident_or_kw_start_symbol(ch) (((ch) >= 'a' && (ch) <= 'z') || ((ch) >= 'A' && (ch) <= 'Z') || (ch) == '_')
@@ -31,7 +31,6 @@ TTokenizer *tokenizer_from_str(char *str, size_t strSize)
     TTokBuffer *tokBuffer = get_token_buffer();
     if (tokBuffer == NULL)
         return NULL;
-
 
     TTokenizer *tokenizer = (TTokenizer *)malloc(sizeof(TTokenizer));
     if (tokenizer == NULL)
@@ -53,7 +52,7 @@ TTokenizer *tokenizer_from_str(char *str, size_t strSize)
     tokenizer->tokensBuf = tokBuffer;
 
     tokenizer->isError = false;
-    tokenizer->errMesg.textMsg = NULL;
+    tokenizer->tokError.textMsg = NULL;
 
     return tokenizer;
 }
@@ -65,13 +64,18 @@ bool is_tokenizer_error(TTokenizer *tokenizer)
 
 static void set_pos_tokenizer_error(TTokenizer *tokenizer, char *errPos, char *textMsg)
 {
-    tokenizer->errMesg = make_pos_error_by_cur(textMsg, tokenizer->curLine, tokenizer->lineIndex, errPos, tokenizer->end);
+    tokenizer->tokError.textMsg = textMsg;
+    tokenizer->tokError.withPos = true;
+    tokenizer->tokError.pos = get_buffer_error_pos(errPos, tokenizer->curLine, tokenizer->lineIndex, tokenizer->end);
+
     tokenizer->isError = true;
 }
 
 static void set_base_tokenizer_error(TTokenizer *tokenizer, char *textMsg)
 {
-    tokenizer->errMesg = make_base_error(textMsg);
+    tokenizer->tokError.textMsg = textMsg;
+    tokenizer->tokError.withPos = false;
+
     tokenizer->isError = true;
 }
 
@@ -82,7 +86,7 @@ void pass_tokenizer_error(TTokenizer *tokenizer)
 
 TTokenizerError get_tokenizer_error(TTokenizer *tokenizer)
 {
-    return tokenizer->errMesg;
+    return tokenizer->tokError;
 }
 
 static int tgetc(TTokenizer *tokenizer, char *ch)
