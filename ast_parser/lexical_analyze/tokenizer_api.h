@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <ast_parser_api.h>
+#include "ast_parser_api.h"
 
 typedef enum TokenTypes
 {
@@ -113,7 +113,7 @@ typedef struct TTokenizer
     TTokenizerError tokError;
 } TTokenizer;
 
-TTokenizer *tokenizer_from_str(char *data, size_t dataSize);
+TTokenizer *tokenizer_from_file_data(const TFileData fileData);
 void delete_tokenizer(TTokenizer *tokenizer);
 
 TToken get_token(TTokenizer *tokenizer);

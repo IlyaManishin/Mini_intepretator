@@ -1,10 +1,9 @@
 #include <assert.h>
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <system_tools.h>
+#include "system_tools.h"
 
 #include "token_buffer.h"
 #include "tokenizer_api.h"
@@ -24,9 +23,9 @@ void delete_tokenizer(TTokenizer *tokenizer)
     free(tokenizer);
 }
 
-TTokenizer *tokenizer_from_str(char *str, size_t strSize)
+TTokenizer *tokenizer_from_file_data(TFileData fileData)
 {
-    assert(str != NULL);
+    assert(fileData.str != NULL);
 
     TTokBuffer *tokBuffer = get_token_buffer();
     if (tokBuffer == NULL)
@@ -39,11 +38,11 @@ TTokenizer *tokenizer_from_str(char *str, size_t strSize)
         return NULL;
     }
 
-    tokenizer->start = str;
-    tokenizer->cur = str;
-    tokenizer->curLine = str;
+    tokenizer->start = fileData.str;
+    tokenizer->cur = fileData.str;
+    tokenizer->curLine = fileData.str;
     tokenizer->lineIndex = 0;
-    tokenizer->end = str + strSize;
+    tokenizer->end = fileData.str + fileData.dataSize;
 
     tokenizer->state = NEW_LINE_STATE;
     tokenizer->newIndent = 0;
@@ -146,17 +145,6 @@ static void tgets(TTokenizer *tokenizer, char *s)
         assert(r != EOF && ch == *s);
         s++;
     }
-}
-
-static bool tcheckc(TTokenizer *tokenizer, char check)
-{
-    char ch;
-    int r = tgetc(tokenizer, &ch);
-    if (r == EOF || ch != check)
-    {
-        return false;
-    }
-    return true;
 }
 
 static bool lookahead(TTokenizer *tokenizer, const char *check)

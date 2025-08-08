@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <ast_parser_api.h>
-#include <parser_errors.h>
-#include <system_tools.h>
+#include "ast_parser_api.h"
+#include "parser_errors.h"
+#include "system_tools.h"
 
 #include "../../ast_parser/lexical_analyze/tokenizer_api.h"
 
@@ -82,9 +82,9 @@ int base_test(const TCheckData data[], int n)
     snprintf(filePath, PATH_MAX, "test_files/test%d.txt", testIndex);
     FILE *file = fopen(filePath, "r");
     TFileData fileData = read_file_data(file);
-    assert(fileData.data != NULL);
+    assert(fileData.str != NULL);
 
-    TTokenizer *tokenizer = tokenizer_from_str(fileData.data, fileData.dataSize);
+    TTokenizer *tokenizer = tokenizer_from_file_data(fileData);
     for (int i = 0; i < n; i++)
     {
         int r = check_token(tokenizer, i, data[i].check, data[i].str);

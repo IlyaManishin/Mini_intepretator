@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <parser_errors.h>
-#include <system_tools.h>
+#include "parser_errors.h"
+#include "system_tools.h"
 
 static void print_error_line(const char *errLine, const char *end)
 {

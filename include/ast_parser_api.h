@@ -3,8 +3,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <system_tools.h>
-#include <parser_errors.h>
+#include "parser_errors.h"
+#include "system_tools.h"
+
+#define CRIT_ERR_MAX_LENGTH 128
 
 typedef struct TTokenizerError
 {
@@ -21,11 +23,16 @@ typedef struct TAstParserError
     //???
 } TAstParserError;
 
+typedef struct TAstParserResp
+{
+    char critErrorText[CRIT_ERR_MAX_LENGTH];
+    bool isCritError;
+    
+    TTokenizerError *tokenizerErrors;
+    int tokErrCount;
 
+    TAstParserError* astParserErrors;
+    int astParserErrCount;
 
-typedef struct TAstParserResp{
-
+    TFileData _fileData; // to destroy with response
 } TAstParserResp;
-
-
-
