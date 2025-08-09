@@ -5,6 +5,7 @@
 
 #include "parser_errors.h"
 #include "system_tools.h"
+#include "ast_types.h"
 
 #define CRIT_ERR_MAX_LENGTH 128
 
@@ -23,16 +24,25 @@ typedef struct TAstParserError
     //???
 } TAstParserError;
 
-typedef struct TAstParserResp
+typedef struct TRespErrors
 {
+    TFileData _fileData; // to destroy with errors
+
     char critErrorText[CRIT_ERR_MAX_LENGTH];
     bool isCritError;
-    
+
     TTokenizerError *tokenizerErrors;
     int tokErrCount;
 
-    TAstParserError* astParserErrors;
+    TAstParserError *astParserErrors;
     int astParserErrCount;
+} TRespErrors;
 
-    TFileData _fileData; // to destroy with response
+typedef struct TAstParserResp
+{
+    TRespErrors errors;
+    
 } TAstParserResp;
+
+TAstParserResp *run_ast_parser_from_file(FILE *file, char *fileName);
+void delete_ast_parser_resp(TAstParserResp *resp);
