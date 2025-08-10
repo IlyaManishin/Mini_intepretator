@@ -4,7 +4,8 @@
 #include "ast_parser_api.h"
 #include "system_tools.h"
 
-#include "ast.h"
+#include "ast_parser.h"
+#include "ast_rules.h"
 #include "lexical_analyze/tokenizer_api.h"
 
 void delete_ast_parser(TAstParser *parser)
@@ -20,6 +21,9 @@ TAstParser *ast_parser_from_file_data(TFileData fileData, TAstParserResp *respDe
         return NULL;
 
     TAstParser *parser = (TAstParser *)malloc(sizeof(TAstParser));
+    if (parser == NULL)
+        return NULL;
+    
     parser->tokenizer = tokenizer;
     parser->respDest = respDest;
 
@@ -28,5 +32,6 @@ TAstParser *ast_parser_from_file_data(TFileData fileData, TAstParserResp *respDe
 
 void run_ast_parser(TAstParser *parser)
 {
-    //???
+    TAst *ast = parser->respDest->ast;
+    ast->first = file_rule(parser);
 }

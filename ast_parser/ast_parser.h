@@ -5,6 +5,7 @@
 
 #include "ast_parser_api.h"
 #include "system_tools.h"
+#include "data_arena.h"
 
 #include "lexical_analyze/tokenizer_api.h"
 
@@ -13,6 +14,7 @@ typedef struct TAstParser
     TAstParserResp *respDest;
 
     TTokenizer *tokenizer;
+    TDataArena* arena;
 } TAstParser;
 
 TAstParser *ast_parser_from_file_data(TFileData fileData, TAstParserResp *respDest);

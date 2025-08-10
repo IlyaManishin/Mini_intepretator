@@ -11,7 +11,7 @@ typedef struct EXPR_statement
 
 typedef struct FUNC_RUN_statement
 {
-    
+
 } FUNC_RUN_statement;
 
 typedef struct TStatement
@@ -24,3 +24,9 @@ typedef struct TStatement
     } value;
 
 } TStatement;
+
+typedef struct TStatements
+{
+    TStatement *statements;
+    size_t length, capacity;
+} TStatements;

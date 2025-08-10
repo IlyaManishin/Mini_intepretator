@@ -7,7 +7,7 @@
 #include "system_tools.h"
 #include "ast_types.h"
 
-#define CRIT_ERR_MAX_LENGTH 128
+#define BASE_ERR_ARR_SIZE 10
 
 typedef struct TRespErrors
 {
@@ -16,11 +16,13 @@ typedef struct TRespErrors
     const char* critErrorText;
     bool isCritError;
 
-    TTokenizerError *tokenizerErrors;
-    int tokErrCount;
+    TTokenizerError *tokErrors;
+    size_t tokErrCount;
+    size_t tokErrCapacity;
 
     TAstParserError *astParserErrors;
-    int astParserErrCount;
+    size_t astParserErrCount;
+    size_t astParserErrCapacity;
 } TRespErrors;
 
 typedef struct TAstParserResp

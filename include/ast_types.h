@@ -12,11 +12,15 @@ typedef enum NodeTypes
 
 typedef enum OperationTypes
 {
-    PASS_OP,
-    COMMANDS_SEQ_OP,
-    SUM,
-    SUB
-    //....
+    OP_PASS,        
+
+    OP_SUM,          // +
+    OP_SUB,          // -
+    OP_MUL,          // *
+    OP_DIV,          // /
+    OP_POW,          // **
+
+    OP_ASSIGN,       // =
 } OperationTypes;
 
 typedef struct TNode
@@ -26,6 +30,7 @@ typedef struct TNode
     {
         OperationTypes op;
         TLiteral literal;
+        TStatements statements;
         TStatement statement;
     } nodeValue;
 
