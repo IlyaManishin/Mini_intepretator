@@ -5,24 +5,50 @@
 
 #include "ast.h"
 
-static void set_critical_resp_error(TAstParserResp *resp, const char *msg)
+static TAstParserResp *init_ast_resp()
 {
-    resp->isCritError = true;
-    strncpy(resp->critErrorText, msg, CRIT_ERR_MAX_LENGTH);
+    TAstParserResp *resp = (TAstParserResp *)malloc(sizeof(TAstParserResp));
+    if (resp == NULL)
+        return NULL;
+
+    resp->errors = (TRespErrors *)malloc(sizeof(TRespErrors));
+    if (resp->errors == NULL)
+        return NULL;
+
+    resp->errors->tokErrCount = 0;
+    resp->errors->astParserErrCount = 0;
+    return resp;
 }
 
-void delete_ast_parser_resp(TAstParserResp *resp)
+static TAst *init_ast()
 {
-    delete_file_data(resp->_fileData);
+    TAst* ast = (TAst*)malloc(sizeof(TAst));
+    ast->first = NULL;
+    return ast;
+}
 
-    free(resp->tokenizerErrors);
-    free(resp->astParserErrors);
-    free(resp);
+static void set_critical_resp_error(TAstParserResp *resp, const char *msg)
+{
+    TRespErrors *errors = resp->errors;
+    errors->isCritError = true;
+    errors->critErrorText = msg;
+}
+
+void delete_parser_resp_errors(TRespErrors *errors)
+{
+    delete_file_data(errors->_fileData);
+    free(errors->tokenizerErrors);
+    free(errors->astParserErrors);
+}
+
+void delete_ast_tree(TAst *ast)
+{
+    //???
 }
 
 TAstParserResp *run_ast_parser_from_file(FILE *file, char *fileName)
 {
-    TAstParserResp *resp = (TAstParserResp *)malloc(sizeof(TAstParserResp));
+    TAstParserResp *resp = init_ast_resp();
     if (resp == NULL)
         return NULL;
 
@@ -32,7 +58,7 @@ TAstParserResp *run_ast_parser_from_file(FILE *file, char *fileName)
         set_critical_resp_error(resp, "Can't open script file");
         return resp;
     }
-    resp->_fileData = fileData;
+    resp->errors->_fileData = fileData;
 
     TAstParser *parser = ast_parser_from_file_data(fileData, resp);
     if (parser == NULL)

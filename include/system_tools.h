@@ -5,7 +5,7 @@
 
 typedef struct TFileData
 {
-    const char* str;
+    char* str;
     size_t dataSize;
 } TFileData;
 

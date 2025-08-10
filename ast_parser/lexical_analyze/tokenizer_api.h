@@ -1,14 +1,16 @@
 #pragma once
 
 #include <stdbool.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "ast_parser_api.h"
+// #include "ast_parser_api.h"
+#include "parser_errors.h"
+#include "system_tools.h"
 
 typedef enum TokenTypes
 {
-    ERROR, //on error
+    ERROR, // on error
 
     IDENT,
     NUMBER,
@@ -28,10 +30,10 @@ typedef enum TokenTypes
     OR_KW,       // or
     NOT_KW,      // not
 
-    WHILE_KW,  // while
-    IN_KW,     // in
-    PASS_KW,   // pass
-    FUNC_KW,   // func == def
+    WHILE_KW, // while
+    IN_KW,    // in
+    PASS_KW,  // pass
+    DEF_KW,   // def
     // CLASS_KW,  // class
     IMPORT_KW, // import
     FROM_KW,   // from
@@ -76,8 +78,8 @@ typedef struct TToken
 {
     TokenTypes type;
 
-    char *start;
-    char *end; // for ident only
+    const char *start;
+    const char *end; // for ident only?
 
 } TToken;
 
@@ -97,23 +99,23 @@ typedef struct TTokBuffer
 
 typedef struct TTokenizer
 {
-    char* start;
-    char *cur;
-    char *curLine; // start of code or after \n 
+    const char *start;
+    const char *cur;
+    const char *curLine; // start of code or after \n
     int lineIndex;
-    char *end;
+    const char *end;
 
     TokenizerStates state;
     int curIndent;
     int newIndent;
 
-    TTokBuffer* tokensBuf;
+    TTokBuffer *tokensBuf;
 
     bool isError;
     TTokenizerError tokError;
 } TTokenizer;
 
-TTokenizer *tokenizer_from_file_data(const TFileData fileData);
+TTokenizer *tokenizer_from_file_data(TFileData fileData);
 void delete_tokenizer(TTokenizer *tokenizer);
 
 TToken get_token(TTokenizer *tokenizer);

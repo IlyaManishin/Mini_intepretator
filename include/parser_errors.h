@@ -1,13 +1,30 @@
 #pragma once
 
+#include <stdbool.h>
+
 typedef struct TErrorBufferPos
 {
-    char *errPos;
-    char *errLineStart;
+    const char *errPos;
+    const char *errLineStart;
     int errLineIndex;
-    char *bufferEnd;
+    const char *bufferEnd;
 } TErrorBufferPos;
 
-void print_error_msg(char *textMsg);
-void print_error_with_pos(char *errMsg, TErrorBufferPos errorPosInfo);
-TErrorBufferPos get_buffer_error_pos(char *errPos, char *errLineStart, int errLineIndex, char *bufferEnd);
+typedef struct TTokenizerError
+{
+    const char *textMsg;
+
+    bool withPos;
+    TErrorBufferPos pos;
+} TTokenizerError;
+
+typedef struct TAstParserError
+{
+    char *textMsg;
+    TErrorBufferPos pos;
+    //???
+} TAstParserError;
+
+void print_error_msg(const char *textMsg);
+void print_error_with_pos(const char *errMsg, TErrorBufferPos errorPosInfo);
+TErrorBufferPos get_buffer_error_pos(const char *errPos, const char *errLineStart, int errLineIndex, const char *bufferEnd);

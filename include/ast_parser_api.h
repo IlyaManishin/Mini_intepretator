@@ -9,26 +9,11 @@
 
 #define CRIT_ERR_MAX_LENGTH 128
 
-typedef struct TTokenizerError
-{
-    char *textMsg;
-
-    bool withPos;
-    TErrorBufferPos pos;
-} TTokenizerError;
-
-typedef struct TAstParserError
-{
-    char *textMsg;
-    TErrorBufferPos pos;
-    //???
-} TAstParserError;
-
 typedef struct TRespErrors
 {
     TFileData _fileData; // to destroy with errors
 
-    char critErrorText[CRIT_ERR_MAX_LENGTH];
+    const char* critErrorText;
     bool isCritError;
 
     TTokenizerError *tokenizerErrors;
@@ -40,9 +25,10 @@ typedef struct TRespErrors
 
 typedef struct TAstParserResp
 {
-    TRespErrors errors;
-    
+    TRespErrors* errors;
+    TAst* ast;
 } TAstParserResp;
 
 TAstParserResp *run_ast_parser_from_file(FILE *file, char *fileName);
-void delete_ast_parser_resp(TAstParserResp *resp);
+void delete_ast_tree(TAst *ast);
+void delete_parser_resp_errors(TRespErrors *errors);

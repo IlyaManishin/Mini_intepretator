@@ -16,12 +16,12 @@ static void print_error_line(const char *errLine, const char *end)
     printf("\n");
 }
 
-void print_error_msg(char *textMsg)
+void print_error_msg(const char *textMsg)
 {
     printf("%s:\n", textMsg);
 }
 
-void print_error_with_pos(char *textMsg, TErrorBufferPos pos)
+void print_error_with_pos(const char *textMsg, TErrorBufferPos pos)
 {
     print_error_msg(textMsg);
 
@@ -31,7 +31,7 @@ void print_error_with_pos(char *textMsg, TErrorBufferPos pos)
     printf("%*c^\n\n", pointer_offset, ' ');
 }
 
-TErrorBufferPos get_buffer_error_pos(char *errPos, char *errLineStart, int errLineIndex, char *bufferEnd)
+TErrorBufferPos get_buffer_error_pos(const char *errPos, const char *errLineStart, int errLineIndex, const char *bufferEnd)
 {
     TErrorBufferPos pos;
     pos.errPos = errPos;

@@ -9,8 +9,6 @@
 #include "tokenizer_api.h"
 #include "tokenizer_settings.h"
 
-// #define get_tokenizer_err(tokenizer, textMsg) \
-//     get_error_pos_by_tok(textMsg, tokenizer->curLine, tokenizer->curLineIndex, tokenizer->cur)
 
 #define is_pass_symbol(ch) ((ch) == '\r' || (ch) == '\t' || (ch) == ' ')
 #define is_ident_or_kw_start_symbol(ch) (((ch) >= 'a' && (ch) <= 'z') || ((ch) >= 'A' && (ch) <= 'Z') || (ch) == '_')
@@ -61,7 +59,7 @@ bool is_tokenizer_error(TTokenizer *tokenizer)
     return tokenizer->isError;
 }
 
-static void set_pos_tokenizer_error(TTokenizer *tokenizer, char *errPos, char *textMsg)
+static void set_pos_tokenizer_error(TTokenizer *tokenizer, const char *errPos, const char *textMsg)
 {
     tokenizer->tokError.textMsg = textMsg;
     tokenizer->tokError.withPos = true;
@@ -88,21 +86,21 @@ TTokenizerError get_tokenizer_error(TTokenizer *tokenizer)
     return tokenizer->tokError;
 }
 
-static int tgetc(TTokenizer *tokenizer, char *ch)
+static int tgetc(TTokenizer *tokenizer, char *dest)
 {
     if (tokenizer->cur >= tokenizer->end)
     {
-        *ch = '\0';
+        *dest = '\0';
         return EOF;
     }
-    *ch = *tokenizer->cur;
+    *dest = *tokenizer->cur;
     tokenizer->cur++;
-    if (*ch == '\n')
+    if (*dest == '\n')
     {
         tokenizer->lineIndex++;
         tokenizer->curLine = tokenizer->cur;
     }
-    if (*ch == '\0')
+    if (*dest == '\0')
     {
         // tokenizer->cur = tokenizer->end;
         return EOF;
@@ -110,11 +108,11 @@ static int tgetc(TTokenizer *tokenizer, char *ch)
     return 0;
 }
 
-static char *_get_line_before(TTokenizer *tokenizer)
+static const char *_get_line_before(TTokenizer *tokenizer)
 {
     assert(tokenizer->lineIndex != 0);
 
-    char *cur = tokenizer->cur - 1;
+    const char *cur = tokenizer->cur - 1;
     while (cur >= tokenizer->start)
     {
         if (*cur == '\n')
@@ -136,7 +134,7 @@ static void tbackc(TTokenizer *tokenizer, char ch)
     assert(*tokenizer->cur == ch);
 }
 
-static void tgets(TTokenizer *tokenizer, char *s)
+static void tgets(TTokenizer *tokenizer, const char *s)
 {
     char ch;
     while (*s != '\0')
@@ -151,7 +149,7 @@ static bool lookahead(TTokenizer *tokenizer, const char *check)
 {
     bool result = true;
 
-    char *cur = check;
+    const char *cur = check;
     char tok_ch;
     while (*cur != '\0')
     {
@@ -266,6 +264,10 @@ static TToken read_keyword_token(TTokenizer *tokenizer)
         else if (try_to_tgets(tokenizer, "n"))
             type = IN_KW;
         break;
+    case 'd':
+        if (try_to_tgets(tokenizer, "ef"))
+            type = DEF_KW;
+        break;
     case 'e':
         if (try_to_tgets(tokenizer, "lse"))
             type = ELSE_KW;
@@ -275,8 +277,6 @@ static TToken read_keyword_token(TTokenizer *tokenizer)
     case 'f':
         if (try_to_tgets(tokenizer, "or"))
             type = FOR_KW;
-        else if (try_to_tgets(tokenizer, "unc"))
-            type = FUNC_KW;
         else if (try_to_tgets(tokenizer, "rom"))
             type = FROM_KW;
         break;

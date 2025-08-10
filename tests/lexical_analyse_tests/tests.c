@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ast_parser_api.h"
+// #include "ast_parser_api.h"
 #include "parser_errors.h"
 #include "system_tools.h"
 
@@ -133,7 +133,7 @@ int test2()
         {IMPORT_KW, NULL},
         {IDENT, "foo"},
         {NEWLINE, NULL},
-        {FUNC_KW, NULL},
+        {DEF_KW, NULL},
         {IDENT, "f"},
         {LPAREN, NULL},
         {RPAREN, NULL},

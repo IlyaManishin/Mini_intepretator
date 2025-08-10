@@ -1,11 +1,13 @@
 #pragma once
 
 #include "internal/ast_literals.h"
+#include "internal/ast_statements.h"
 
 typedef enum NodeTypes
 {
     LITERAL_TYPE,
-    OP_TYPE
+    OP_TYPE,
+    STATEMENTS_TYPE,
 } NodeTypes;
 
 typedef enum OperationTypes
@@ -24,6 +26,7 @@ typedef struct TNode
     {
         OperationTypes op;
         TLiteral literal;
+        TStatement statement;
     } nodeValue;
 
     TNode *childs;
@@ -35,5 +38,5 @@ typedef struct TNode
 
 typedef struct TAst
 {
-    TNode first;
+    TNode *first;
 } TAst;
