@@ -1,3 +1,5 @@
+#define BASE_STATETEMENTS_SIZE 8
+
 enum StatementsTypes
 {
     EXPRESSION_STMT,
@@ -27,6 +29,6 @@ typedef struct TStatement
 
 typedef struct TStatements
 {
-    TStatement *statements;
+    TStatement *statementsArr;
     size_t length, capacity;
 } TStatements;

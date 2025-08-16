@@ -10,6 +10,11 @@ static TAst *init_ast()
     TAst *ast = (TAst *)malloc(sizeof(TAst));
     if (ast == NULL)
         return NULL;
+
+    ast->astArena = get_data_arena();
+    if (ast->astArena == NULL)
+        return NULL;
+
     ast->first = NULL;
     return ast;
 }
@@ -52,13 +57,6 @@ static TAstParserResp *init_ast_parser_resp()
     return resp;
 }
 
-static void set_critical_resp_error(TAstParserResp *resp, const char *msg)
-{
-    TRespErrors *errors = resp->errors;
-    errors->isCritError = true;
-    errors->critErrorText = msg;
-}
-
 void delete_parser_resp_errors(TRespErrors *errors)
 {
     delete_file_data(errors->_fileData);
@@ -89,7 +87,7 @@ TAstParserResp *run_ast_parser_from_file(FILE *file, char *fileName)
     TAstParser *parser = ast_parser_from_file_data(fileData, resp);
     if (parser == NULL)
     {
-        set_critical_resp_error(resp, "Memory limit exceded");
+        set_memory_crit_error(resp);
         return resp;
     }
     run_ast_parser(parser);

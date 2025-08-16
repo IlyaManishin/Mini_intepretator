@@ -14,7 +14,7 @@ void delete_ast_parser(TAstParser *parser)
     free(parser);
 }
 
-TAstParser *ast_parser_from_file_data(TFileData fileData, TAstParserResp *respDest)
+TAstParser *ast_parser_from_file_data(TFileData fileData, TAstParserResp *resp)
 {
     TTokenizer *tokenizer = tokenizer_from_file_data(fileData);
     if (tokenizer == NULL)
@@ -25,13 +25,13 @@ TAstParser *ast_parser_from_file_data(TFileData fileData, TAstParserResp *respDe
         return NULL;
     
     parser->tokenizer = tokenizer;
-    parser->respDest = respDest;
-
+    parser->resp = resp;
+    parser->deep = 0;
     return parser;
 }
 
 void run_ast_parser(TAstParser *parser)
 {
-    TAst *ast = parser->respDest->ast;
+    TAst *ast = parser->resp->ast;
     ast->first = file_rule(parser);
 }

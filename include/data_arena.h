@@ -14,5 +14,6 @@ typedef struct TDataArena
 
 TDataArena *get_data_arena();
 void *arena_malloc(TDataArena *arena, size_t size);
+void *arena_realloc(TDataArena *arena, void *block, size_t lastSize, size_t newSize);
 void arena_reset(TDataArena *arena);
 void arena_free(TDataArena *arena);

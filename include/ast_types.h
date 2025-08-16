@@ -34,14 +34,12 @@ typedef struct TNode
         TStatement statement;
     } nodeValue;
 
-    TNode *childs;
-    int childsCount;
-
     int line;
     int column;
 } TNode;
 
 typedef struct TAst
 {
+    TDataArena *astArena;
     TNode *first;
 } TAst;

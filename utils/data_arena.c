@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "data_arena.h"
 
@@ -24,11 +25,11 @@ void *arena_malloc(TDataArena *arena, size_t size)
     {
         size_t new_capacity = arena->capacity * 2;
         if (new_capacity < used + size)
-            new_capacity = used + size; 
+            new_capacity = used + size;
 
         byte *new_start = realloc(arena->start, new_capacity);
         if (!new_start)
-            return NULL; 
+            return NULL;
 
         arena->last = new_start + used;
         arena->start = new_start;
@@ -39,6 +40,14 @@ void *arena_malloc(TDataArena *arena, size_t size)
     return ptr;
 }
 
+// temp fast realization
+void *arena_realloc(TDataArena *arena, void *block, size_t lastSize, size_t newSize)
+{
+    void *newBlock = arena_malloc(arena, newSize);
+    if (newBlock == NULL)
+        return NULL;
+    memcpy(newBlock, block, lastSize);
+}
 
 void arena_reset(TDataArena *arena)
 {
