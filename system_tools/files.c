@@ -15,6 +15,8 @@ TFileData read_file_data(FILE *file)
     fseek(file, 0, SEEK_END);
     long dataSize = ftell(file);
     fseek(file, 0, SEEK_SET);
+    if (dataSize <= 0)
+        goto error;
 
     char *data = (char *)malloc(dataSize + 1);
     if (data == NULL)
@@ -23,7 +25,7 @@ TFileData read_file_data(FILE *file)
     }
     fread(data, 1, dataSize, file);
     fseek(file, 0, SEEK_SET);
-    
+
     result.str = data;
     result.dataSize = dataSize;
     return result;
@@ -33,7 +35,9 @@ error:
     return result;
 }
 
-void delete_file_data(TFileData data){
-    if (data.str == NULL) return ;
+void delete_file_data(TFileData data)
+{
+    if (data.str == NULL)
+        return;
     free(data.str);
 }

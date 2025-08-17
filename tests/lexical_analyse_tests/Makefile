@@ -6,8 +6,8 @@ CFLAGS := -Wall -g -I $(INCLUDE_DIR)
 
 OBJS := tokenizer_api.o tokenizer.o token_buffer.o files.o parser_errors.o 
 
-TESTS_FILE := tests.c
-TESTS_OBJ := ${TESTS_FILE:.c=.o}
+TESTS_FILES := tokens_read_tests.c tests_run.c
+TESTS_OBJS := ${TESTS_FILES:.c=.o}
 
 all: $(RESULT)
 
@@ -26,11 +26,11 @@ files.o: ${BASE_DIR}/system_tools/files.c $(wildcard $(INCLUDE_DIR)/*.h)
 parser_errors.o: ${BASE_DIR}/utils/parser_errors.c $(wildcard $(INCLUDE_DIR)/*.h)
 	gcc $(CFLAGS) -c $< -o $@
 
-${TESTS_OBJ}: ${TESTS_FILE} $(wildcard $(INCLUDE_DIR)/*.h)
+${TESTS_OBJS}: %.o: %.c $(wildcard $(INCLUDE_DIR)/*.h)
 	gcc ${CFLAGS} -c $< -o $@
 
-$(RESULT): $(OBJS) ${TESTS_OBJ}
-	gcc $(CFLAGS) $(OBJS) ${TESTS_OBJ} -o $(RESULT)
+$(RESULT): $(OBJS) ${TESTS_OBJS}
+	gcc $(CFLAGS) $(OBJS) ${TESTS_OBJS} -o $(RESULT)
 
 clear:
 	rm -f *.o $(RESULT)
