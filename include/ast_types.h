@@ -1,5 +1,7 @@
 #pragma once
 
+#include "data_arena.h"
+
 #include "internal/ast_literals.h"
 #include "internal/ast_statements.h"
 

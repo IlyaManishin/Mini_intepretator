@@ -35,9 +35,9 @@ char *get_token_string(TToken token)
     return tokenStr;
 }
 
-int check_token(TTokenizer *tok, int index, TokenTypes check, const char *checkName)
+int check_token(TTokenizer *tok, int index, TokenTypes check, const char *checkName, TToken (*read_token_function)(TTokenizer *tok))
 {
-    TToken token = get_token(tok);
+    TToken token = read_token_function(tok);
     if (is_tokenizer_error(tok))
     {
         if (check != ERROR || withValidErrorsPrint)
@@ -74,7 +74,7 @@ int check_token(TTokenizer *tok, int index, TokenTypes check, const char *checkN
     return SUCC;
 }
 
-int base_test(const TCheckData data[], int n)
+int base_test(const TCheckData data[], int n, TToken (*read_token_function)(TTokenizer *tok))
 {
     int result = SUCC;
 
@@ -87,14 +87,14 @@ int base_test(const TCheckData data[], int n)
     TTokenizer *tokenizer = tokenizer_from_file_data(fileData);
     for (int i = 0; i < n; i++)
     {
-        int r = check_token(tokenizer, i, data[i].check, data[i].str);
+        int r = check_token(tokenizer, i, data[i].check, data[i].str, read_token_function);
         if (r == ERR)
         {
             result = ERR;
             break;
         }
     }
-    if (check_token(tokenizer, 0, EOF_TOKEN, NULL) == ERR)
+    if (check_token(tokenizer, 0, EOF_TOKEN, NULL, read_token_function) == ERR)
         result = ERR;
 
     delete_tokenizer(tokenizer);
@@ -124,7 +124,7 @@ int test1()
         {RPAREN, NULL},
         {DEDENT, NULL}};
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n);
+    return base_test(data, n, soft_token_read);
 }
 
 int test2()
@@ -147,7 +147,7 @@ int test2()
         {NEWLINE, NULL},
         {DEDENT, NULL}};
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n);
+    return base_test(data, n, soft_token_read);
 }
 
 int test3()
@@ -169,7 +169,7 @@ int test3()
         {ASSIGN, NULL},
         {STRING, "boo"}};
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n);
+    return base_test(data, n, soft_token_read);
 }
 
 int test4()
@@ -186,7 +186,7 @@ int test4()
         {STRING, "foo\"boo\"foo"},
     };
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n);
+    return base_test(data, n, soft_token_read);
 }
 
 int test5()
@@ -202,7 +202,7 @@ int test5()
         {ERROR, NULL},
     };
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n);
+    return base_test(data, n, soft_token_read);
 }
 
 int run_test(int (*test)())

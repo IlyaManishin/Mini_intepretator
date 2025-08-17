@@ -9,3 +9,7 @@ typedef enum TokenizerSettings
 
     MAX_IDENT_LENGTH = 128
 } TokenizerSettings;
+
+TToken read_new_token(TTokenizer *tokenizer);
+TToken make_error_token(TTokenizer *tokenizer);
+void set_memory_error(TTokenizer *tokenizer);

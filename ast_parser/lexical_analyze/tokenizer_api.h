@@ -4,84 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #include "ast_parser_api.h"
 #include "parser_errors.h"
 #include "system_tools.h"
-
-typedef enum TokenTypes
-{
-    ERROR, // on error
-
-    IDENT,
-    NUMBER,
-    STRING,
-
-    RETURN_KW,   // return
-    IF_KW,       // if
-    ELSE_KW,     // else
-    ELIF_KW,     // elif
-    FOR_KW,      // for
-    BREAK_KW,    // break
-    CONTINUE_KW, // continue
-    TRUE_KW,     // True
-    NULL_KW,     // Null
-    FALSE_KW,    // False
-    AND_KW,      // and
-    OR_KW,       // or
-    NOT_KW,      // not
-
-    WHILE_KW, // while
-    IN_KW,    // in
-    PASS_KW,  // pass
-    DEF_KW,   // def
-    // CLASS_KW,  // class
-    IMPORT_KW, // import
-    FROM_KW,   // from
-    // AS_KW,     // as
-
-    PLUS,           // +
-    MINUS,          // -
-    MULTY,          // *
-    DIVIS,          // /
-    DOUBLESLASH,    // //
-    PERCENT,        // %
-    EQ,             // ==
-    NEQ,            // !=
-    LT,             // <
-    GT,             // >
-    LEQ,            // <=
-    GEQ,            // >=
-    ASSIGN,         // =
-    PLUS_ASSIGN,    // +=
-    MINUS_ASSIGN,   // -=
-    STAR_ASSIGN,    // *=
-    SLASH_ASSIGN,   // /=
-    PERCENT_ASSIGN, // %=
-
-    LPAREN,   // (
-    RPAREN,   // )
-    LBRACE,   // {
-    RBRACE,   // }
-    LBRACKET, // [
-    RBRACKET, // ]
-    COMMA,    // ,
-    DOT,      // .
-    COLON,    // :
-
-    INDENT,
-    DEDENT,
-    NEWLINE,
-    EOF_TOKEN
-} TokenTypes;
-
-typedef struct TToken
-{
-    TokenTypes type;
-
-    const char *start;
-    const char *end; // for ident only?
-
-} TToken;
+#include "token.h"
 
 typedef enum TokenizerStates
 {
@@ -90,12 +15,7 @@ typedef enum TokenizerStates
     EOF_STATE,
 } TokenizerStates;
 
-typedef struct TTokBuffer
-{
-    TToken *data;
-    int length;
-    int capacity;
-} TTokBuffer;
+typedef struct TTokenBuffer TTokenBuffer;
 
 typedef struct TTokenizer
 {
@@ -109,7 +29,7 @@ typedef struct TTokenizer
     int curIndent;
     int newIndent;
 
-    TTokBuffer *tokensBuf;
+    TTokenBuffer *tokensBuf;
 
     bool isError;
     TTokenizerError tokError;
@@ -117,10 +37,11 @@ typedef struct TTokenizer
 
 TTokenizer *tokenizer_from_file_data(TFileData fileData);
 void delete_tokenizer(TTokenizer *tokenizer);
-
-TToken get_token(TTokenizer *tokenizer);
-void back_token(TTokenizer *tokenizer, TToken token);
+TToken read_new_token(TTokenizer *tokenizer);
 
 bool is_tokenizer_error(TTokenizer *tokenizer);
 TTokenizerError get_tokenizer_error(TTokenizer *tokenizer);
 void pass_tokenizer_error(TTokenizer *tokenizer);
+
+TToken soft_token_read(TTokenizer *tokenizer);
+TToken strong_token_read(TTokenizer *tokenizer);

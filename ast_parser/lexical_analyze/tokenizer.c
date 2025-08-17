@@ -6,69 +6,29 @@
 #include "system_tools.h"
 
 #include "token_buffer.h"
+#include "tokenizer.h"
 #include "tokenizer_api.h"
-#include "tokenizer_settings.h"
-
 
 #define is_pass_symbol(ch) ((ch) == '\r' || (ch) == '\t' || (ch) == ' ')
 #define is_ident_or_kw_start_symbol(ch) (((ch) >= 'a' && (ch) <= 'z') || ((ch) >= 'A' && (ch) <= 'Z') || (ch) == '_')
 #define is_digit(ch) ((ch) >= '0' && (ch) <= '9')
 #define is_string_start_symbol(ch) (ch == '"' || ch == '\'' || ch == '`')
 
-void delete_tokenizer(TTokenizer *tokenizer)
-{
-    free(tokenizer->tokensBuf);
-    free(tokenizer);
-}
-
-TTokenizer *tokenizer_from_file_data(TFileData fileData)
-{
-    assert(fileData.str != NULL);
-
-    TTokBuffer *tokBuffer = get_token_buffer();
-    if (tokBuffer == NULL)
-        return NULL;
-
-    TTokenizer *tokenizer = (TTokenizer *)malloc(sizeof(TTokenizer));
-    if (tokenizer == NULL)
-    {
-        delete_token_buffer(tokBuffer);
-        return NULL;
-    }
-
-    tokenizer->start = fileData.str;
-    tokenizer->cur = fileData.str;
-    tokenizer->curLine = fileData.str;
-    tokenizer->lineIndex = 0;
-    tokenizer->end = fileData.str + fileData.dataSize;
-
-    tokenizer->state = NEW_LINE_STATE;
-    tokenizer->newIndent = 0;
-    tokenizer->curIndent = 0;
-
-    tokenizer->tokensBuf = tokBuffer;
-
-    tokenizer->isError = false;
-    tokenizer->tokError.textMsg = NULL;
-
-    return tokenizer;
-}
-
-bool is_tokenizer_error(TTokenizer *tokenizer)
-{
-    return tokenizer->isError;
-}
-
-static void set_pos_tokenizer_error(TTokenizer *tokenizer, const char *errPos, const char *textMsg)
+static void set_pos_tokenizer_error(TTokenizer *tokenizer, const char *errStart, const char *textMsg, TokenizerErrTypes type)
 {
     tokenizer->tokError.textMsg = textMsg;
     tokenizer->tokError.withPos = true;
-    tokenizer->tokError.pos = get_buffer_error_pos(errPos, tokenizer->curLine, tokenizer->lineIndex, tokenizer->end);
+    tokenizer->tokError.pos = get_buffer_error_pos(errStart, tokenizer->curLine, tokenizer->lineIndex, tokenizer->end);
 
     tokenizer->isError = true;
 }
 
-static void set_base_tokenizer_error(TTokenizer *tokenizer, char *textMsg)
+static void set_invalid_token_error(TTokenizer *tokenizer, const char *errStart, const char *textMsg)
+{
+    set_pos_tokenizer_error(tokenizer, errStart, textMsg, INVALID_TOKEN);
+}
+
+static void set_base_tokenizer_error(TTokenizer *tokenizer, char *textMsg, TokenizerErrTypes type)
 {
     tokenizer->tokError.textMsg = textMsg;
     tokenizer->tokError.withPos = false;
@@ -76,14 +36,9 @@ static void set_base_tokenizer_error(TTokenizer *tokenizer, char *textMsg)
     tokenizer->isError = true;
 }
 
-void pass_tokenizer_error(TTokenizer *tokenizer)
+void set_memory_error(TTokenizer *tokenizer)
 {
-    tokenizer->isError = false;
-}
-
-TTokenizerError get_tokenizer_error(TTokenizer *tokenizer)
-{
-    return tokenizer->tokError;
+    set_base_tokenizer_error(tokenizer, "Memory limit exceded", MEMORY_ERROR);
 }
 
 static int tgetc(TTokenizer *tokenizer, char *dest)
@@ -204,7 +159,7 @@ static TToken make_token(TTokenizer *tokenizer, TokenTypes type)
     return token;
 }
 
-static TToken make_error_token(TTokenizer *tokenizer)
+TToken make_error_token(TTokenizer *tokenizer)
 {
     return make_token(tokenizer, ERROR);
 }
@@ -499,7 +454,7 @@ static TToken read_number(TTokenizer *tokenizer)
         int digits_count = _read_digits_part(tokenizer);
         if (digits_count == 0)
         {
-            set_pos_tokenizer_error(tokenizer, tokenizer->cur, "Invalid number fraction");
+            set_invalid_token_error(tokenizer, tokenizer->cur, "Invalid number fraction");
             return make_error_token(tokenizer);
         }
         r = tgetc(tokenizer, &after);
@@ -510,7 +465,7 @@ static TToken read_number(TTokenizer *tokenizer)
     tbackc(tokenizer, after);
     if (is_ident_or_kw_start_symbol(after))
     {
-        set_pos_tokenizer_error(tokenizer, tokenizer->cur, "Unexpected symbol after number");
+        set_invalid_token_error(tokenizer, tokenizer->cur, "Unexpected symbol after number");
         return make_error_token(tokenizer);
     }
     return make_token(tokenizer, NUMBER);
@@ -539,7 +494,7 @@ static TToken read_string_token(TTokenizer *tokenizer)
         }
         // else if (is_string_start_symbol(ch))
         // {
-        //     set_pos_tokenizer_error(tokenizer, tokenizer->cur - 1, "Invalid symbol inside string");
+        //     set_invalid_token_error(tokenizer, tokenizer->cur - 1, "Invalid symbol inside string");
         //     return make_error_token(tokenizer);
         // }
         if (ch == '\\')
@@ -552,7 +507,7 @@ static TToken read_string_token(TTokenizer *tokenizer)
         }
     }
 unclosed_string_error:
-    set_pos_tokenizer_error(tokenizer, tokenizer->cur - 1, "Unclosed string given");
+    set_invalid_token_error(tokenizer, tokenizer->cur - 1, "Unclosed string given");
     TToken result = make_error_token(tokenizer);
     return result;
 }
@@ -569,8 +524,20 @@ static void read_pass_symbols(TTokenizer *tokenizer)
         }
     }
 }
+static void read_error_chars(TTokenizer *tokenizer)
+{
+    char ch;
+    while (tgetc(tokenizer, &ch) != EOF)
+    {
+        if (is_ident_or_kw_start_symbol(ch) || is_digit(ch) || is_pass_symbol(ch))
+        {
+            tbackc(tokenizer, ch);
+            break;
+        }
+    }
+}
 
-static TToken read_token(TTokenizer *tokenizer)
+TToken read_new_token(TTokenizer *tokenizer)
 {
     if (is_tokenizer_error(tokenizer))
     {
@@ -592,7 +559,7 @@ restart:
         r = tgetc(tokenizer, &ch);
         if (r == EOF)
         {
-            goto EOF_set;
+            goto EOF_state_set;
         }
         if (ch == '\n') // empty line
         {
@@ -603,7 +570,7 @@ restart:
             tbackc(tokenizer, ch);
             if (newIndendWhitespaces % WHITESPACE_IN_TAB != 0)
             {
-                set_pos_tokenizer_error(tokenizer, tokenizer->cur, "Invalid line indend");
+                set_invalid_token_error(tokenizer, tokenizer->cur, "Invalid line indend");
                 return make_error_token(tokenizer);
             }
             tokenizer->newIndent = newIndendWhitespaces / WHITESPACE_IN_TAB;
@@ -612,7 +579,7 @@ restart:
     }
     read_pass_symbols(tokenizer);
 
-EOF_set:
+EOF_state_set:
     if (is_tokenizer_EOF(tokenizer) && tokenizer->state != EOF_STATE)
     {
         tokenizer->state = EOF_STATE;
@@ -634,7 +601,7 @@ EOF_set:
         return make_EOF_token();
 
     tokenizer->start = tokenizer->cur;
-    r = tgetc(tokenizer, &ch);
+    tgetc(tokenizer, &ch);
     // if (r == EOF || ch == '\0')
     //     return make_EOF_token();
     if (ch == '\n')
@@ -669,27 +636,7 @@ EOF_set:
     if (opToken.type != ERROR)
         return opToken;
 
-    set_pos_tokenizer_error(tokenizer, tokenizer->cur, "Unexpected symbol");
+    set_invalid_token_error(tokenizer, tokenizer->cur, "Unexpected operation");
+    read_error_chars(tokenizer);
     return make_error_token(tokenizer);
-}
-
-TToken get_token(TTokenizer *tokenizer)
-{
-    if (get_token_buffer_length(tokenizer->tokensBuf) == 0)
-    {
-        return read_token(tokenizer);
-    }
-    return pop_token_from_buffer(tokenizer->tokensBuf);
-}
-
-void back_token(TTokenizer *tokenizer, TToken token)
-{
-    if (is_tokenizer_error(tokenizer))
-        return;
-
-    int r = append_token(tokenizer->tokensBuf, token);
-    if (r == 0)
-    {
-        set_base_tokenizer_error(tokenizer, "Memory limit exceded");
-    }
 }

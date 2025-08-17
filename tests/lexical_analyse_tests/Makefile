@@ -4,14 +4,17 @@ SRC_DIR := ${BASE_DIR}/ast_parser/lexical_analyze
 INCLUDE_DIR := ${BASE_DIR}/include
 CFLAGS := -Wall -g -I $(INCLUDE_DIR)
 
-OBJS := tokenizer.o token_buffer.o files.o parser_errors.o
+OBJS := tokenizer_api.o tokenizer.o token_buffer.o files.o parser_errors.o 
 
 TESTS_FILE := tests.c
 TESTS_OBJ := ${TESTS_FILE:.c=.o}
 
 all: $(RESULT)
 
-tokenizer.o: ${SRC_DIR}/tokenizer.c $(wildcard $(INCLUDE_DIR)/*.h) ${SRC_DIR}/tokenizer_settings.h
+tokenizer_api.o: ${SRC_DIR}/tokenizer_api.c $(wildcard $(INCLUDE_DIR)/*.h) ${SRC_DIR}/tokenizer_api.h
+	gcc $(CFLAGS) -c $< -o $@
+
+tokenizer.o: ${SRC_DIR}/tokenizer.c $(wildcard $(INCLUDE_DIR)/*.h) ${SRC_DIR}/tokenizer.h
 	gcc $(CFLAGS) -c $< -o $@
 
 token_buffer.o: ${SRC_DIR}/token_buffer.c ${SRC_DIR}/token_buffer.h $(wildcard $(INCLUDE_DIR)/*.h)
@@ -29,5 +32,5 @@ ${TESTS_OBJ}: ${TESTS_FILE} $(wildcard $(INCLUDE_DIR)/*.h)
 $(RESULT): $(OBJS) ${TESTS_OBJ}
 	gcc $(CFLAGS) $(OBJS) ${TESTS_OBJ} -o $(RESULT)
 
-clean:
+clear:
 	rm -f *.o $(RESULT)

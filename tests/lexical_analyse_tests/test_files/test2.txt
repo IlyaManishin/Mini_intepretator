@@ -1,5 +1,5 @@
 import foo
-func f():
+def f():
     print(13.4)
    
     
