@@ -7,7 +7,7 @@
 #include "system_tools.h"
 #include "data_arena.h"
 
-#include "lexical_analyze/tokenizer_api.h"
+#include "lexer/tokenizer_api.h"
 
 #define MAX_AST_PARSER_DEEP 1024
 #define SUCC 0

@@ -5,9 +5,6 @@
 
 #include "token_buffer.h"
 
-#define abs(a) ((a) >= 0) ? a : -a
-#define to_positive(a) (a < 0 ? 0 : a)
-
 TTokenBuffer *get_token_buf()
 {
     TTokenBuffer *buf = (TTokenBuffer *)malloc(sizeof(TTokenBuffer));
@@ -20,14 +17,13 @@ TTokenBuffer *get_token_buf()
         free(buf);
         return NULL;
     }
-    buf->curPos = 0;
     buf->left = 0;
     buf->right = 0;
     buf->capacity = BASE_SIZE;
     return buf;
 }
 
-static int get_buf_length(TTokenBuffer *buf)
+int get_buf_length(TTokenBuffer *buf)
 {
     int delta = buf->right - buf->left;
     return delta >= 0 ? delta : delta + buf->capacity;
@@ -41,9 +37,11 @@ static int buf_mod(TTokenBuffer *buf, int value)
 static int increase_buf(TTokenBuffer *buf)
 {
     int new_capacity = buf->capacity * 2;
-    buf->data = (TToken *)realloc(buf->data, sizeof(TToken) * new_capacity);
-    if (buf->data == NULL)
+    TToken* newData = (TToken *)realloc(buf->data, sizeof(TToken) * new_capacity);
+    if (newData == NULL)
         return 0;
+
+    buf->data = newData;
     if (buf->left >= buf->right)
     {
         for (int i = 0; i < buf->right; i++)
@@ -58,8 +56,6 @@ static int increase_buf(TTokenBuffer *buf)
 
 int append_token_to_buf(TTokenBuffer *buf, TToken token)
 {
-    assert(buf->curPos == buf->right);
-
     if (get_buf_length(buf) == buf->capacity - 1)
     {
         int r = increase_buf(buf);
@@ -68,46 +64,26 @@ int append_token_to_buf(TTokenBuffer *buf, TToken token)
     }
     buf->data[buf->right] = token;
     buf->right = buf_mod(buf, buf->right + 1);
-    buf->curPos = buf->right;
     return 1;
 }
 
-int pop_token_from_buf(TTokenBuffer *buf, TToken *dest)
+int pop_tokens_from_buf(TTokenBuffer *buf, int tokensCount)
 {
-    if (get_buf_length(buf) == 0)
-        return 0;
+    assert(get_buf_length(buf) >= tokensCount);
 
-    *dest = buf->data[buf->left];
-    buf->left = buf_mod(buf, buf->left + 1);
-    buf->curPos = to_positive(buf->curPos - 1);
+    buf->left = buf_mod(buf, buf->left + tokensCount);
     return 1;
 }
 
-int get_token_from_buf(TTokenBuffer *buf, TToken *dest)
+int get_token_from_buf(TTokenBuffer *buf, TToken *dest, int curPos)
 {
-    if (buf->curPos == get_buf_length(buf))
+    assert(curPos >= 0);
+    if (curPos >= get_buf_length(buf))
         return 0;
 
-    int index = buf_mod(buf, buf->left + buf->curPos);
+    int index = buf_mod(buf, buf->left + curPos);
     *dest = buf->data[index];
-    buf->curPos++;
     return 1;
-}
-
-void set_buf_pos(TTokenBuffer *buf, int newPos)
-{
-    assert(0 <= newPos && newPos < get_buf_length(buf));
-    buf->curPos = newPos;
-}
-
-int get_buf_pos(TTokenBuffer *buf)
-{
-    return buf->curPos;
-}
-
-void rewind_buf_pos(TTokenBuffer *buf)
-{
-    buf->curPos = 0;
 }
 
 void delete_token_buf(TTokenBuffer *buf)

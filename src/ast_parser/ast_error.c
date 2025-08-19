@@ -20,4 +20,5 @@ bool is_critical_error(TAstParserResp *resp)
 
 bool append_ast_error()
 {
+    return false;
 }

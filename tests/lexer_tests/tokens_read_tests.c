@@ -7,7 +7,7 @@
 #include "parser_errors.h"
 #include "system_tools.h"
 
-#include "../../ast_parser/lexical_analyze/tokenizer_api.h"
+#include "../ast_parser/lexer/tokenizer_api.h"
 
 #define PATH_MAX 128
 #define SUCC 1
@@ -39,7 +39,7 @@ int check_token(TTokenizer *tok,
                 int index,
                 TokenTypes check,
                 const char *checkName,
-                bool isQuiet,
+                bool isSilent,
                 TToken (*read_token_function)(TTokenizer *tok))
 {
     TToken token = read_token_function(tok);
@@ -48,7 +48,7 @@ int check_token(TTokenizer *tok,
         if (check != ERROR || withValidErrorsPrint)
         {
             TTokenizerError error = get_tokenizer_error(tok);
-            if (!isQuiet)
+            if (!isSilent)
             {
                 if (error.withPos)
                     print_error_with_pos(error.textMsg, error.pos);
@@ -82,12 +82,12 @@ int check_token(TTokenizer *tok,
     return SUCC;
 }
 
-int base_test(const TCheckData data[], int n, bool isQuiet, TToken (*read_token_function)(TTokenizer *tok))
+int base_test(const TCheckData data[], int n, bool isSilent, TToken (*read_token_function)(TTokenizer *tok))
 {
     int result = SUCC;
 
     char filePath[PATH_MAX];
-    snprintf(filePath, PATH_MAX, "test_files/token_test%d.txt", testIndex);
+    snprintf(filePath, PATH_MAX, "lexical_test_files/token_test%d.txt", testIndex);
     FILE *file = fopen(filePath, "r");
     TFileData fileData = read_file_data(file);
     assert(fileData.str != NULL);
@@ -95,14 +95,14 @@ int base_test(const TCheckData data[], int n, bool isQuiet, TToken (*read_token_
     TTokenizer *tokenizer = tokenizer_from_file_data(fileData);
     for (int i = 0; i < n; i++)
     {
-        int r = check_token(tokenizer, i, data[i].check, data[i].str, isQuiet, read_token_function);
+        int r = check_token(tokenizer, i, data[i].check, data[i].str, isSilent, read_token_function);
         if (r == ERR)
         {
             result = ERR;
             break;
         }
     }
-    if (check_token(tokenizer, 0, EOF_TOKEN, NULL, isQuiet, read_token_function) == ERR)
+    if (check_token(tokenizer, 0, EOF_TOKEN, NULL, isSilent, read_token_function) == ERR)
         result = ERR;
 
     delete_tokenizer(tokenizer);
@@ -132,7 +132,7 @@ int test1()
         {RPAREN, NULL},
         {DEDENT, NULL}};
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n, false, soft_token_read) & base_test(data, n, true, strong_token_read);
+    return base_test(data, n, false, token_soft_read);
 }
 
 int test2()
@@ -155,7 +155,7 @@ int test2()
         {NEWLINE, NULL},
         {DEDENT, NULL}};
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n, false, soft_token_read) & base_test(data, n, true, strong_token_read);
+    return base_test(data, n, false, token_soft_read);
 }
 
 int test3()
@@ -177,7 +177,7 @@ int test3()
         {ASSIGN, NULL},
         {STRING, "boo"}};
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n, false, soft_token_read) & base_test(data, n, true, strong_token_read);
+    return base_test(data, n, false, token_soft_read);
 }
 
 int test4()
@@ -194,7 +194,7 @@ int test4()
         {STRING, "foo\"boo\"foo"},
     };
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n, false, soft_token_read) & base_test(data, n, true, strong_token_read);
+    return base_test(data, n, false, token_soft_read);
 }
 
 int test5()
@@ -210,7 +210,7 @@ int test5()
         {ERROR, NULL},
     };
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n, false, soft_token_read) & base_test(data, n, true, strong_token_read);
+    return base_test(data, n, false, token_soft_read);
 }
 
 int test6()
@@ -233,7 +233,7 @@ int test6()
         {ERROR, NULL},
         {IDENT, "c"}};
     int n = sizeof(data) / sizeof(data[0]);
-    return base_test(data, n, false, soft_token_read) & base_test(data, n, true, strong_token_read);
+    return base_test(data, n, false, token_soft_read);
 }
 
 int run_test(int (*test)())

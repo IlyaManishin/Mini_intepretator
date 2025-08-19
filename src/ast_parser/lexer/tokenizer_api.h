@@ -45,6 +45,7 @@ TTokenizerError get_tokenizer_error(TTokenizer *tokenizer);
 void pass_tokenizer_error(TTokenizer *tokenizer);
 
 TToken token_soft_read(TTokenizer *tokenizer);
+TToken strong_token_read(TTokenizer *tokenizer);
 
 int get_tokenizer_pos(TTokenizer *tokenizer);
 void set_tokenizer_pos(TTokenizer *tokenizer, int pos);

@@ -1,8 +1,8 @@
 #include <assert.h>
 
-#include "tokenizer_api.h"
 #include "token_buffer.h"
 #include "tokenizer.h"
+#include "tokenizer_api.h"
 
 TTokenizer *tokenizer_from_file_data(TFileData fileData)
 {
@@ -29,6 +29,7 @@ TTokenizer *tokenizer_from_file_data(TFileData fileData)
     tokenizer->newIndent = 0;
     tokenizer->curIndent = 0;
 
+    tokenizer->curBufPos = 0;
     tokenizer->tokensBuf = tokBuffer;
 
     tokenizer->isError = false;
@@ -79,16 +80,19 @@ TTokenizerError get_tokenizer_error(TTokenizer *tokenizer)
 //     }
 // }
 
-TToken soft_token_read(TTokenizer *tokenizer)
+
+TToken token_soft_read(TTokenizer *tokenizer)
 {
     TToken token;
-    if (get_token_from_buf(tokenizer->tokensBuf, &token))
+    if (get_token_from_buf(tokenizer->tokensBuf, &token, tokenizer->curBufPos))
     {
+        tokenizer->curBufPos++;
         return token;
     }
 
     token = read_new_token(tokenizer);
     int r = append_token_to_buf(tokenizer->tokensBuf, token);
+    tokenizer->curBufPos++;
     if (!r)
     {
         set_memory_error(tokenizer);
@@ -98,14 +102,37 @@ TToken soft_token_read(TTokenizer *tokenizer)
     return token;
 }
 
-TToken strong_token_read(TTokenizer *tokenizer)
+/**clear used tokens between left and curBufPos forever */
+void flush_used_tokens(TTokenizer *tokenizer)
 {
-    TToken token;
-    if (pop_token_from_buf(tokenizer->tokensBuf, &token))
-    {
-        return token;
-    }
-    token = read_new_token(tokenizer);
-    return token;
+    pop_tokens_from_buf(tokenizer->tokensBuf, tokenizer->curBufPos);
+    rewind_tokenizer_pos(tokenizer);
 }
 
+// TToken strong_token_read(TTokenizer *tokenizer)
+// {
+//     TToken token;
+//     if (pop_token_from_buf(tokenizer->tokensBuf, &token))
+//     {
+//         return token;
+//     }
+//     token = read_new_token(tokenizer);
+//     return token;
+// }
+
+int get_tokenizer_pos(TTokenizer *tokenizer)
+{
+    return tokenizer->curBufPos;
+}
+
+void set_tokenizer_pos(TTokenizer *tokenizer, int pos)
+{
+    assert(0 <= pos && pos <= get_buf_length(tokenizer->tokensBuf));
+    tokenizer->curBufPos = pos;
+}
+
+int rewind_tokenizer_pos(TTokenizer *tokenizer)
+{
+    tokenizer->curBufPos = 0;
+    return 0;
+}

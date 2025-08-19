@@ -34,7 +34,7 @@ static TNode *statements_rule(TAstParser *p)
     if (is_critical_error(p->resp))
         return NULL;
     
-        
+    return NULL;
 }
 
 static TNode *statement_rule(TAstParser *p)
