@@ -7,7 +7,7 @@
 #include "parser_errors.h"
 #include "system_tools.h"
 
-#include "../ast_parser/lexer/tokenizer_api.h"
+#include "../../src/ast_parser/lexer/tokenizer_api.h"
 
 #define PATH_MAX 128
 #define SUCC 1
@@ -87,7 +87,7 @@ int base_test(const TCheckData data[], int n, bool isSilent, TToken (*read_token
     int result = SUCC;
 
     char filePath[PATH_MAX];
-    snprintf(filePath, PATH_MAX, "lexical_test_files/token_test%d.txt", testIndex);
+    snprintf(filePath, PATH_MAX, "lexer_test_files/token_test%d.txt", testIndex);
     FILE *file = fopen(filePath, "r");
     TFileData fileData = read_file_data(file);
     assert(fileData.str != NULL);

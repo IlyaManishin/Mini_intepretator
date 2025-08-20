@@ -12,4 +12,4 @@ add_library(ast_parser STATIC
     ast_rule_tools.c
     ast_rules.c)
     
-target_link_libraries(ast_parser PUBLIC lexer)
+target_link_libraries(ast_parser PRIVATE lexer)

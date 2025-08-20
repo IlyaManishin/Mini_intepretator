@@ -1,12 +1,11 @@
-add_executable(test_lexer
+add_executable(lexer_tests
     tests_run.c
     tokens_read_tests.c
 )
 
-target_link_libraries(test_lexer PRIVATE ast_parser system_tools utils)
-
-#file(GLOB TEST_FILES "${CMAKE_CURRENT_LIST_DIR}/lexical_test_files/*.txt")
-
-# foreach(file ${TEST_FILES})
-#     configure_file(${file} ${CMAKE_CURRENT_BINARY_DIR}/lexical_test_files/ COPYONLY)
-# endforeach()
+target_link_libraries(lexer_tests PRIVATE ast_parser system_tools utils)
+set_target_properties(lexer_tests PROPERTIES 
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/tests
+)
+file(GLOB TEST_FILES "${CMAKE_CURRENT_LIST_DIR}/lexer_test_files/*.txt")
+file(COPY ${TEST_FILES} DESTINATION ${CMAKE_BINARY_DIR}/bin/tests/lexer_test_files)
