@@ -1,6 +1,6 @@
 #include "ast_parser_api.h"
-#include "system_tools.h"
 #include "syntax_errors.h"
+#include "system_tools.h"
 
 #include "ast/ast_api.h"
 #include "parser.h"
@@ -10,8 +10,8 @@ static TParserResp *init_empty_parser_resp()
     TParserResp *resp = (TParserResp *)malloc(sizeof(TParserResp));
     if (resp == NULL)
         return NULL;
+    resp->critError.isError = false;
 
-    resp->critError = NULL;
     resp->ast = NULL;
     resp->errors = NULL;
     return resp;
@@ -23,19 +23,13 @@ void delete_parser_resp(TParserResp *resp)
         delete_ast(resp->ast);
     if (resp->errors != NULL)
         delete_parser_errors(resp->errors);
-    if (resp->critError != NULL)
-        delete_crit_error(resp->critError);
     free(resp);
 }
 
 static void set_resp_crit_error(TParserResp *resp, const char *msg)
 {
-    resp->critError = init_crit_error();
-    if (resp->critError == NULL)
-        return;
-
-    resp->critError->isError = true;
-    strncpy(resp->critError->msg, msg, CRIT_ERR_MSG_LENGTH);
+    resp->critError.isError = true;
+    strncpy(resp->critError.msg, msg, CRIT_ERR_MSG_LENGTH);
 }
 
 static TParserResp *get_error_resp(const char *msg)
@@ -63,27 +57,34 @@ TParserResp *run_ast_parser_from_file(FILE *file, char *fileName)
     }
 
     TParserResp *resp = init_empty_parser_resp();
-    if (resp == NULL){
+    if (resp == NULL)
+    {
         delete_file_data(fileData);
         return NULL;
     }
 
-    TAstParser *parser = ast_parser_from_file_data(fileData);
+    resp->errors = init_errors(fileData);
+    if (resp->errors == NULL)
+    {
+        resp->critError.isError = true;
+        delete_file_data(fileData);
+        no_memory_crit_message(resp->critError.msg);
+        return resp;
+    }
+
+    TAstParser *parser = ast_parser_from_file_data(fileData, resp->errors, &resp->critError);
     if (parser == NULL)
     {
-        delete_parser_resp(resp);
-        delete_file_data(fileData);
-        return NULL;
+        resp->critError.isError = true;
+        no_memory_crit_message(resp->critError.msg);
+        return resp;
     }
 
     if (!is_critical_error(parser))
         run_ast_parser(parser);
 
-    resp->errors = parser->errors;
-    resp->critError = parser->critErr;
     resp->ast = parser->ast;
 
     delete_ast_parser(parser);
-
     return resp;
 }

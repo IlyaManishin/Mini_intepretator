@@ -24,7 +24,7 @@ typedef struct TParserErrors
 
 typedef struct TParserResp
 {
-    TCritError *critError;
+    TCritError critError;
     TParserErrors *errors;
     TAst *ast;
 } TParserResp;

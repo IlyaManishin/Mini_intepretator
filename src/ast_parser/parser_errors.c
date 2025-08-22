@@ -1,5 +1,5 @@
-#include "parser.h"
 #include "ast_parser_api.h"
+#include "parser.h"
 
 TParserErrors *init_errors(TFileData fileData)
 {
@@ -40,29 +40,16 @@ void delete_parser_errors(TParserErrors *errors)
     free(errors);
 }
 
-TCritError *init_crit_error()
+void set_crit_error(TAstParser *parser, const char *msg)
 {
-    TCritError *critErr = (TCritError *)malloc(sizeof(TCritError));
-    critErr->isError = false;
-    return critErr;
-}
-
-void delete_crit_error(TCritError *critErr)
-{
-    free(critErr);
-}
-
-
-void set_crit_error(TAstParser* parser, const char *msg)
-{
-    TCritError* critErr = parser->critErr;
+    TCritError *critErr = parser->critErr;
     critErr->isError = true;
     strncpy(critErr->msg, msg, CRIT_ERR_MSG_LENGTH);
 }
 
 void set_memory_crit_error(TAstParser *parser)
 {
-    TCritError* critErr = parser->critErr;
+    TCritError *critErr = parser->critErr;
     critErr->isError = true;
     no_memory_crit_message(critErr->msg);
 }

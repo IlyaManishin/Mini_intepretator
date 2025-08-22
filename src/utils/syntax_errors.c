@@ -16,8 +16,6 @@ static void print_error_line(const char *errLine, const char *end)
     printf("\n");
 }
 
-
-
 void print_error_msg(const char *textMsg)
 {
     printf("%s:\n", textMsg);

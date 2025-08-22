@@ -29,26 +29,15 @@ static TAstParser *init_parser()
     return parser;
 }
 
-TAstParser *ast_parser_from_file_data(TFileData fileData)
+TAstParser *ast_parser_from_file_data(TFileData fileData, TParserErrors *errors, TCritError *critErr)
 {
+    if (errors == NULL || critErr == NULL)
+        return NULL;
+
     TAstParser *parser = init_parser();
     if (parser == NULL)
         return NULL;
-
-    parser->critErr = init_crit_error();
-    if (parser->critErr == NULL)
-    {
-        delete_ast_parser(parser);
-        return NULL;
-    }
-
-    parser->errors = init_errors(fileData);
-    if (parser->errors == NULL)
-    {
-        set_memory_crit_error(parser);
-        return NULL;
-    }
-
+    
     parser->tokenizer = tokenizer_from_file_data(fileData);
     if (parser->tokenizer == NULL)
     {
