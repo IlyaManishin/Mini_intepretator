@@ -6,13 +6,35 @@
 #include "ast_types.h"
 #include "data_arena.h"
 
-#include "ast.h"
-#include "../parser.h"
 #include "../lexer/tokenizer_api.h"
+#include "../parser.h"
+#include "ast.h"
 
-bool lookahead(TAstParser *parser)
+bool lookahead(TAstParser *p, TokenTypes checkType)
 {
-    // TTokenizer* tok = parser->tokenizer;
+    TTokenizer *tok = p->tokenizer;
+
+    while (1)
+    {
+        TToken token = token_soft_read(tok);
+        if (token.type == EOF_TOKEN)
+        {
+            return false;
+        }
+        if (is_tokenizer_error(tok))
+        {
+            TTokenizerError error = get_tokenizer_error(tok);
+            if (error.type == MEMORY_ERROR)
+            {
+                set_memory_crit_error(p);
+                return false;
+            }
+            append_tokenizer_error(p, error);
+            pass_tokenizer_error(tok);
+            continue;
+        }
+        return token.type == checkType;
+    }
     return false;
 }
 
@@ -25,7 +47,7 @@ TNode *get_node(TDataArena *arena, TToken curToken, NodeTypes type)
     return node;
 }
 
-void delete_node(TDataArena* arena, TNode *node)
+void delete_node(TDataArena *arena, TNode *node)
 {
     arena_free(arena, node);
 }

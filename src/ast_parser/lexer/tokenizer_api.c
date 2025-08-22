@@ -22,7 +22,7 @@ TTokenizer *tokenizer_from_file_data(TFileData fileData)
     tokenizer->start = fileData.str;
     tokenizer->cur = fileData.str;
     tokenizer->curLine = fileData.str;
-    tokenizer->lineIndex = 0;
+    tokenizer->lineno = 0;
     tokenizer->end = fileData.str + fileData.dataSize;
 
     tokenizer->state = NEW_LINE_STATE;
@@ -80,7 +80,6 @@ TTokenizerError get_tokenizer_error(TTokenizer *tokenizer)
 //     }
 // }
 
-
 TToken token_soft_read(TTokenizer *tokenizer)
 {
     TToken token;
@@ -91,6 +90,12 @@ TToken token_soft_read(TTokenizer *tokenizer)
     }
 
     token = read_new_token(tokenizer);
+    if (token.type == EOF_TOKEN || token.type == ERROR_TOKEN)
+    {
+        return token;
+    }
+
+    //append only correct tokens
     int r = append_token_to_buf(tokenizer->tokensBuf, token);
     tokenizer->curBufPos++;
     if (!r)

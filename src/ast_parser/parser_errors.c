@@ -1,3 +1,5 @@
+#include "assert.h"
+
 #include "ast_parser_api.h"
 #include "parser.h"
 
@@ -59,11 +61,6 @@ bool is_critical_error(TAstParser *parser)
     return parser->critErr->isError;
 }
 
-bool append_ast_error()
-{
-    return false;
-}
-
 void no_file_crit_message(char *dest, char *fileName)
 {
     snprintf(dest, CRIT_ERR_MSG_LENGTH, "Can't open file: %s", fileName);
@@ -72,4 +69,81 @@ void no_file_crit_message(char *dest, char *fileName)
 void no_memory_crit_message(char *dest)
 {
     snprintf(dest, CRIT_ERR_MSG_LENGTH, "Memory limit exceded");
+}
+
+// static void *increase_error_capacity(TDataArena *arena, size_t capacityPtr, )
+// {
+// }
+
+// bool append_tokenizer_error(TAstParser *parser, TTokenizerError tokError)
+// {
+//     assert(parser->errors != NULL);
+
+//     TParserErrors *errors = parser->errors;
+
+//     if (errors->tokErrCount == errors->tokErrCapacity)
+//     {
+//         TTokenizerError *newTokErrors =
+//     }
+// }
+
+// bool append_ast_error(TAstParser *parser, TAstParserError astError)
+// {
+//     assert(parser->errors != NULL);
+//     return false;
+// }
+
+static void *increase_error_capacity(TDataArena *arena, void *arr, size_t *capacity, size_t elemSize)
+{
+    size_t newCapacity = *capacity * 2;
+    void *newArr = arena_realloc(arena, arr, (*capacity) * elemSize, newCapacity * elemSize);
+    if (newArr == NULL)
+        return NULL;
+
+    *capacity = newCapacity;
+    return newArr;
+}
+
+bool append_tokenizer_error(TAstParser *parser, TTokenizerError tokError)
+{
+    assert(parser->errors != NULL);
+
+    TParserErrors *errors = parser->errors;
+    TDataArena *arena = get_parser_arena(parser);
+
+    if (errors->tokErrCount == errors->tokErrCapacity)
+    {
+        TTokenizerError *newArr = increase_error_capacity(arena,
+                                                          errors->tokErrors,
+                                                          &errors->tokErrCapacity,
+                                                          sizeof(TTokenizerError));
+        if (newArr == NULL)
+            return false;
+        errors->tokErrors = newArr;
+    }
+
+    errors->tokErrors[errors->tokErrCount++] = tokError;
+    return true;
+}
+
+bool append_ast_error(TAstParser *parser, TAstParserError astError)
+{
+    assert(parser->errors != NULL);
+
+    TParserErrors *errors = parser->errors;
+    TDataArena *arena = get_parser_arena(parser);
+
+    if (errors->astParserErrCount == errors->astParserErrCapacity)
+    {
+        TAstParserError *newArr = increase_error_capacity(arena,
+                                                          errors->astParserErrors,
+                                                          &errors->astParserErrCapacity,
+                                                          sizeof(TAstParserError));
+        if (newArr == NULL)
+            return false;
+        errors->astParserErrors = newArr;
+    }
+
+    errors->astParserErrors[errors->astParserErrCount++] = astError;
+    return true;
 }

@@ -2,7 +2,7 @@
 
 typedef enum TokenTypes
 {
-    ERROR, // on error
+    ERROR_TOKEN, // on error
 
     IDENT,
     NUMBER,
@@ -69,7 +69,9 @@ typedef enum TokenTypes
 typedef struct TToken
 {
     TokenTypes type;
-
+    
     const char *start;
     const char *end; // for ident only?
+    int lineno;
+    int col;
 } TToken;

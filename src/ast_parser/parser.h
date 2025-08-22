@@ -32,6 +32,8 @@ void run_ast_parser(TAstParser *parser);
 TDataArena *get_parser_arena(TAstParser *parser);
 
 TParserErrors *init_errors(TFileData fileData);
+bool append_tokenizer_error(TAstParser *parser, TTokenizerError tokError);
+bool append_ast_error(TAstParser *parser, TAstParserError astError);
 void delete_parser_errors(TParserErrors *errors);
 
 void set_crit_error(TAstParser* parser, const char *msg);

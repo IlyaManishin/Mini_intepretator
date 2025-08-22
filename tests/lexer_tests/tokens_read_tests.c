@@ -45,7 +45,7 @@ static int check_token(TTokenizer *tok,
     TToken token = read_token_function(tok);
     if (is_tokenizer_error(tok))
     {
-        if (check != ERROR || withValidErrorsPrint)
+        if (check != ERROR_TOKEN || withValidErrorsPrint)
         {
             TTokenizerError error = get_tokenizer_error(tok);
             if (!isSilent)
@@ -202,12 +202,12 @@ static int test5()
     TCheckData data[] = {
         {IDENT, "a"},
         {ASSIGN, NULL},
-        {ERROR, NULL},
+        {ERROR_TOKEN, NULL},
         {NEWLINE, NULL},
 
         {IDENT, "b"},
         {ASSIGN, NULL},
-        {ERROR, NULL},
+        {ERROR_TOKEN, NULL},
     };
     int n = sizeof(data) / sizeof(data[0]);
     return base_test(data, n, false, token_soft_read);
@@ -225,12 +225,12 @@ static int test6()
         {NEWLINE, NULL},
 
         {IDENT, "b"},
-        {ERROR, NULL},
+        {ERROR_TOKEN, NULL},
         {IDENT, "c"},
         {NEWLINE, NULL},
 
         {IDENT, "b"},
-        {ERROR, NULL},
+        {ERROR_TOKEN, NULL},
         {IDENT, "c"}};
     int n = sizeof(data) / sizeof(data[0]);
     return base_test(data, n, false, token_soft_read);

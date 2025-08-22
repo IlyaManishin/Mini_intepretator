@@ -35,12 +35,16 @@ static TNode *statements_rule(TAstParser *p)
 {
     if (is_critical_error(p))
         return NULL;
-    // TDataArena* arena = get_parser_arena(p);
-    // TStatements *statements = init_statements_node(p, );
+
+    TDataArena* arena = get_parser_arena(p);
+
+    int curPos = get_tokenizer_pos(p->tokenizer);
     TStatements *statements = NULL;
+    // TStatements *statements = init_statements_node(p, );
     if (statements == NULL)
     {
         set_memory_crit_error(p);
+        return NULL;
     }
 
     return NULL;

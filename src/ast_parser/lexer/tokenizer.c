@@ -18,7 +18,7 @@ static void set_pos_tokenizer_error(TTokenizer *tokenizer, const char *errStart,
 {
     tokenizer->tokError.textMsg = textMsg;
     tokenizer->tokError.withPos = true;
-    tokenizer->tokError.pos = get_error_file_pos(errStart, tokenizer->curLine, tokenizer->lineIndex, tokenizer->end);
+    tokenizer->tokError.pos = get_error_file_pos(errStart, tokenizer->curLine, tokenizer->lineno, tokenizer->end);
 
     tokenizer->isError = true;
 }
@@ -52,7 +52,7 @@ static int tgetc(TTokenizer *tokenizer, char *dest)
     tokenizer->cur++;
     if (*dest == '\n')
     {
-        tokenizer->lineIndex++;
+        tokenizer->lineno++;
         tokenizer->curLine = tokenizer->cur;
     }
     if (*dest == '\0')
@@ -65,7 +65,7 @@ static int tgetc(TTokenizer *tokenizer, char *dest)
 
 static const char *_get_line_before(TTokenizer *tokenizer)
 {
-    assert(tokenizer->lineIndex != 0);
+    assert(tokenizer->lineno != 0);
 
     const char *cur = tokenizer->cur - 1;
     while (cur >= tokenizer->start)
@@ -83,7 +83,7 @@ static void tbackc(TTokenizer *tokenizer, char ch)
     if (tokenizer->cur == tokenizer->curLine - 1)
     {
         tokenizer->curLine = _get_line_before(tokenizer);
-        tokenizer->lineIndex--;
+        tokenizer->lineno--;
     }
     assert(tokenizer->cur >= tokenizer->start);
     assert(*tokenizer->cur == ch);
@@ -156,12 +156,17 @@ static TToken make_token(TTokenizer *tokenizer, TokenTypes type)
     token.start = tokenizer->start;
     token.end = tokenizer->cur;
 
+    token.col = tokenizer->start - tokenizer->curLine; //need to test
+    if (token.col < 0)
+        token.col = 0;
+    token.lineno = tokenizer->lineno;
+
     return token;
 }
 
 TToken make_error_token(TTokenizer *tokenizer)
 {
-    return make_token(tokenizer, ERROR);
+    return make_token(tokenizer, ERROR_TOKEN);
 }
 
 static int read_new_line_indent(TTokenizer *tokenizer)
@@ -203,7 +208,7 @@ static TToken read_keyword_token(TTokenizer *tokenizer)
     char first;
     tgetc(tokenizer, &first);
 
-    TokenTypes type = ERROR;
+    TokenTypes type = ERROR_TOKEN;
 
     switch (first)
     {
@@ -277,7 +282,7 @@ static TToken read_keyword_token(TTokenizer *tokenizer)
         break;
     }
 
-    if (type == ERROR)
+    if (type == ERROR_TOKEN)
     {
         tbackc(tokenizer, first);
         return make_error_token(tokenizer);
@@ -395,7 +400,7 @@ static TToken read_operation_token(TTokenizer *tokenizer)
     if (r2 != EOF)
     {
         TToken result = _read_two_char_operation_token(tokenizer, first, second);
-        if (result.type != ERROR)
+        if (result.type != ERROR_TOKEN)
         {
             return result;
         }
@@ -403,7 +408,7 @@ static TToken read_operation_token(TTokenizer *tokenizer)
     }
 
     TToken result = _read_one_char_operation_token(tokenizer, first);
-    if (result.type == ERROR)
+    if (result.type == ERROR_TOKEN)
         tbackc(tokenizer, first);
     return result;
 }
@@ -614,7 +619,7 @@ EOF_state_set:
     if (is_ident_or_kw_start_symbol(ch))
     {
         TToken keywordToken = read_keyword_token(tokenizer);
-        if (keywordToken.type != ERROR)
+        if (keywordToken.type != ERROR_TOKEN)
         {
             return keywordToken;
         }
@@ -633,7 +638,7 @@ EOF_state_set:
     }
 
     TToken opToken = read_operation_token(tokenizer);
-    if (opToken.type != ERROR)
+    if (opToken.type != ERROR_TOKEN)
         return opToken;
 
     set_invalid_token_error(tokenizer, tokenizer->cur, "Unexpected operation");
