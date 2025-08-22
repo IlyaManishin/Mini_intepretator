@@ -47,6 +47,7 @@ void *arena_realloc(TDataArena *arena, void *block, size_t lastSize, size_t newS
     if (newBlock == NULL)
         return NULL;
     memcpy(newBlock, block, lastSize);
+    return newBlock;
 }
 
 void arena_reset(TDataArena *arena)
@@ -54,8 +55,13 @@ void arena_reset(TDataArena *arena)
     arena->last = arena->start;
 }
 
-void arena_free(TDataArena *arena)
+void delete_arena(TDataArena *arena)
 {
     free(arena->start);
     free(arena);
+}
+
+void arena_free(TDataArena *arena, void *block)
+{
+    return;
 }

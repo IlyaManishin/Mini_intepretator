@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "parser_errors.h"
+#include "syntax_errors.h"
 #include "system_tools.h"
 
 static void print_error_line(const char *errLine, const char *end)
@@ -16,12 +16,14 @@ static void print_error_line(const char *errLine, const char *end)
     printf("\n");
 }
 
+
+
 void print_error_msg(const char *textMsg)
 {
     printf("%s:\n", textMsg);
 }
 
-void print_error_with_pos(const char *textMsg, TErrorBufferPos pos)
+void print_error_with_pos(const char *textMsg, TErrorFilePos pos)
 {
     print_error_msg(textMsg);
 
@@ -31,9 +33,9 @@ void print_error_with_pos(const char *textMsg, TErrorBufferPos pos)
     printf("%*c^\n\n", pointer_offset, ' ');
 }
 
-TErrorBufferPos get_buffer_error_pos(const char *errStart, const char *errLineStart, int errLineIndex, const char *bufferEnd)
+TErrorFilePos get_error_file_pos(const char *errStart, const char *errLineStart, int errLineIndex, const char *bufferEnd)
 {
-    TErrorBufferPos pos;
+    TErrorFilePos pos;
     pos.errStart = errStart;
     pos.errLineStart = errLineStart;
     pos.errLineIndex = errLineIndex;

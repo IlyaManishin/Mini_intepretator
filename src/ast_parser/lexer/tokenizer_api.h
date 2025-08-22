@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "parser_errors.h"
+#include "syntax_errors.h"
 #include "system_tools.h"
 #include "token.h"
 

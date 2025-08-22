@@ -1,3 +1,3 @@
 #pragma once
 
-int run_tokens_read_tests();
+void run_tokens_read_tests();

@@ -1,96 +1,86 @@
-#include <string.h>
-
 #include "ast_parser_api.h"
 #include "system_tools.h"
+#include "syntax_errors.h"
 
-#include "ast_parser.h"
+#include "ast/ast_api.h"
+#include "parser.h"
 
-static TAst *init_ast()
+static TParserResp *init_empty_parser_resp()
 {
-    TAst *ast = (TAst *)malloc(sizeof(TAst));
-    if (ast == NULL)
-        return NULL;
-
-    ast->astArena = get_data_arena();
-    if (ast->astArena == NULL)
-        return NULL;
-
-    ast->first = NULL;
-    return ast;
-}
-
-static TRespErrors *init_errors()
-{
-    TRespErrors *errors = (TRespErrors *)malloc(sizeof(TRespErrors));
-    if (errors == NULL)
-        return NULL;
-
-    errors->tokErrors = (TTokenizerError *)malloc(BASE_ERR_ARR_SIZE * sizeof(TTokenizerError));
-    errors->astParserErrors = (TAstParserError *)malloc(BASE_ERR_ARR_SIZE * sizeof(TAstParserError));
-    if (errors->tokErrors == NULL || errors->astParserErrors == NULL)
-        return NULL;
-
-    errors->tokErrCapacity = BASE_ERR_ARR_SIZE;
-    errors->astParserErrCapacity = BASE_ERR_ARR_SIZE;
-    errors->tokErrCount = 0;
-    errors->astParserErrCount = 0;
-
-    return errors;
-}
-
-static TAstParserResp *init_ast_parser_resp()
-{
-    TAstParserResp *resp = (TAstParserResp *)malloc(sizeof(TAstParserResp));
+    TParserResp *resp = (TParserResp *)malloc(sizeof(TParserResp));
     if (resp == NULL)
         return NULL;
 
-    resp->ast = init_ast();
-    if (resp->ast == NULL)
-        return NULL;
-
-    resp->errors = init_errors();
-    if (resp->errors == NULL)
-        return NULL;
-
-    resp->errors->tokErrCount = 0;
-    resp->errors->astParserErrCount = 0;
+    resp->critError = NULL;
+    resp->ast = NULL;
+    resp->errors = NULL;
     return resp;
 }
 
-void delete_parser_resp_errors(TRespErrors *errors)
+void delete_parser_resp(TParserResp *resp)
 {
-    delete_file_data(errors->_fileData);
-    free(errors->tokErrors);
-    free(errors->astParserErrors);
-    free(errors);
+    if (resp->ast != NULL)
+        delete_ast(resp->ast);
+    if (resp->errors != NULL)
+        delete_parser_errors(resp->errors);
+    if (resp->critError != NULL)
+        delete_crit_error(resp->critError);
+    free(resp);
 }
 
-void delete_ast_tree(TAst *ast)
+static void set_resp_crit_error(TParserResp *resp, const char *msg)
 {
-    //???
+    resp->critError = init_crit_error();
+    if (resp->critError == NULL)
+        return;
+
+    resp->critError->isError = true;
+    strncpy(resp->critError->msg, msg, CRIT_ERR_MSG_LENGTH);
 }
 
-TAstParserResp *run_ast_parser_from_file(FILE *file, char *fileName)
+static TParserResp *get_error_resp(const char *msg)
 {
-    TAstParserResp *resp = init_ast_parser_resp();
+    TParserResp *resp = init_empty_parser_resp();
     if (resp == NULL)
         return NULL;
 
+    resp->errors = NULL;
+    resp->ast = NULL;
+    set_resp_crit_error(resp, msg);
+    return resp;
+}
+
+TParserResp *run_ast_parser_from_file(FILE *file, char *fileName)
+{
     TFileData fileData = read_file_data(file);
     if (fileData.str == NULL)
     {
-        set_critical_resp_error(resp, "Can't open script file");
-        return resp;
-    }
-    resp->errors->_fileData = fileData;
+        char msg[CRIT_ERR_MSG_LENGTH + 1];
+        no_file_crit_message(msg, fileName);
 
-    TAstParser *parser = ast_parser_from_file_data(fileData, resp);
+        TParserResp *errorResp = get_error_resp(msg);
+        return errorResp;
+    }
+
+    TParserResp *resp = init_empty_parser_resp();
+    if (resp == NULL)
+        return NULL;
+
+    TAstParser *parser = ast_parser_from_file_data(fileData);
     if (parser == NULL)
     {
-        set_memory_crit_error(resp);
-        return resp;
+        delete_parser_resp(resp);
+        delete_file_data(fileData);
+        return NULL;
     }
-    run_ast_parser(parser);
+
+    if (!is_critical_error(parser))
+        run_ast_parser(parser);
+
+    resp->errors = parser->errors;
+    resp->critError = parser->critErr;
+    resp->ast = parser->ast;
+
     delete_ast_parser(parser);
 
     return resp;

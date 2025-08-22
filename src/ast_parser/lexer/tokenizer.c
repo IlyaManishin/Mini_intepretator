@@ -18,7 +18,7 @@ static void set_pos_tokenizer_error(TTokenizer *tokenizer, const char *errStart,
 {
     tokenizer->tokError.textMsg = textMsg;
     tokenizer->tokError.withPos = true;
-    tokenizer->tokError.pos = get_buffer_error_pos(errStart, tokenizer->curLine, tokenizer->lineIndex, tokenizer->end);
+    tokenizer->tokError.pos = get_error_file_pos(errStart, tokenizer->curLine, tokenizer->lineIndex, tokenizer->end);
 
     tokenizer->isError = true;
 }

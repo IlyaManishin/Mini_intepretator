@@ -4,7 +4,7 @@
 #include <string.h>
 
 // #include "ast_parser_api.h"
-#include "parser_errors.h"
+#include "syntax_errors.h"
 #include "system_tools.h"
 
 #include "../../src/ast_parser/lexer/tokenizer_api.h"
@@ -22,7 +22,7 @@ typedef struct TCheckData
 static int testIndex = 1;
 static int withValidErrorsPrint = true;
 
-char *get_token_string(TToken token)
+static char *get_token_string(TToken token)
 {
     size_t length = token.end - token.start;
     char *tokenStr = (char *)malloc((length + 1) * sizeof(char));
@@ -35,7 +35,7 @@ char *get_token_string(TToken token)
     return tokenStr;
 }
 
-int check_token(TTokenizer *tok,
+static int check_token(TTokenizer *tok,
                 int index,
                 TokenTypes check,
                 const char *checkName,
@@ -82,7 +82,7 @@ int check_token(TTokenizer *tok,
     return SUCC;
 }
 
-int base_test(const TCheckData data[], int n, bool isSilent, TToken (*read_token_function)(TTokenizer *tok))
+static int base_test(const TCheckData data[], int n, bool isSilent, TToken (*read_token_function)(TTokenizer *tok))
 {
     int result = SUCC;
 
@@ -111,7 +111,7 @@ int base_test(const TCheckData data[], int n, bool isSilent, TToken (*read_token
     return result;
 }
 
-int test1()
+static int test1()
 {
     TCheckData data[] = {
         {FOR_KW, NULL},
@@ -135,7 +135,7 @@ int test1()
     return base_test(data, n, false, token_soft_read);
 }
 
-int test2()
+static int test2()
 {
     TCheckData data[] = {
         {IMPORT_KW, NULL},
@@ -158,7 +158,7 @@ int test2()
     return base_test(data, n, false, token_soft_read);
 }
 
-int test3()
+static int test3()
 {
     TCheckData data[] = {
         {IDENT, "a"},
@@ -180,7 +180,7 @@ int test3()
     return base_test(data, n, false, token_soft_read);
 }
 
-int test4()
+static int test4()
 {
     // strings test
     TCheckData data[] = {
@@ -197,7 +197,7 @@ int test4()
     return base_test(data, n, false, token_soft_read);
 }
 
-int test5()
+static int test5()
 {
     TCheckData data[] = {
         {IDENT, "a"},
@@ -213,7 +213,7 @@ int test5()
     return base_test(data, n, false, token_soft_read);
 }
 
-int test6()
+static int test6()
 {
     TCheckData data[] = {
         {IDENT, "a"},
@@ -236,7 +236,7 @@ int test6()
     return base_test(data, n, false, token_soft_read);
 }
 
-int run_test(int (*test)())
+static int run_test(int (*test)())
 {
     int result = test();
     if (result)
@@ -252,7 +252,7 @@ int run_test(int (*test)())
     return result;
 }
 
-int run_tokens_read_tests()
+void run_tokens_read_tests()
 {
     int passedCount = 0;
     passedCount += run_test(test1);

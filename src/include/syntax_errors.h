@@ -2,13 +2,15 @@
 
 #include <stdbool.h>
 
-typedef struct TErrorBufferPos
+#define CRIT_ERR_MSG_LENGTH 256
+
+typedef struct TErrorFilePos
 {
     const char *errStart;
     const char *errLineStart;
     int errLineIndex;
     const char *bufferEnd;
-} TErrorBufferPos;
+} TErrorFilePos;
 
 typedef enum TokenizerErrTypes
 {
@@ -22,16 +24,22 @@ typedef struct TTokenizerError
     const char *textMsg;
 
     bool withPos;
-    TErrorBufferPos pos;
+    TErrorFilePos pos;
 } TTokenizerError;
 
 typedef struct TAstParserError
 {
     char *textMsg;
-    TErrorBufferPos pos;
+    TErrorFilePos pos;
     //???
 } TAstParserError;
 
+typedef struct TCritError
+{
+    bool isError;
+    char msg[CRIT_ERR_MSG_LENGTH + 1];
+} TCritError;
+
 void print_error_msg(const char *textMsg);
-void print_error_with_pos(const char *errMsg, TErrorBufferPos errorPosInfo);
-TErrorBufferPos get_buffer_error_pos(const char *errStart, const char *errLineStart, int errLineIndex, const char *bufferEnd);
+void print_error_with_pos(const char *errMsg, TErrorFilePos errorPosInfo);
+TErrorFilePos get_error_file_pos(const char *errStart, const char *errLineStart, int errLineIndex, const char *bufferEnd);

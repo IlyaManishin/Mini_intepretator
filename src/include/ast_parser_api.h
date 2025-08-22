@@ -3,18 +3,15 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "parser_errors.h"
-#include "system_tools.h"
 #include "ast_types.h"
+#include "syntax_errors.h"
+#include "system_tools.h"
 
 #define BASE_ERR_ARR_SIZE 10
 
-typedef struct TRespErrors
+typedef struct TParserErrors
 {
     TFileData _fileData; // to destroy with errors
-
-    const char* critErrorText;
-    bool isCritError;
 
     TTokenizerError *tokErrors;
     size_t tokErrCount;
@@ -23,14 +20,14 @@ typedef struct TRespErrors
     TAstParserError *astParserErrors;
     size_t astParserErrCount;
     size_t astParserErrCapacity;
-} TRespErrors;
+} TParserErrors;
 
-typedef struct TAstParserResp
+typedef struct TParserResp
 {
-    TRespErrors* errors;
-    TAst* ast;
-} TAstParserResp;
+    TCritError *critError;
+    TParserErrors *errors;
+    TAst *ast;
+} TParserResp;
 
-TAstParserResp *run_ast_parser_from_file(FILE *file, char *fileName);
-void delete_ast_tree(TAst *ast);
-void delete_parser_resp_errors(TRespErrors *errors);
+TParserResp *run_ast_parser_from_file(FILE *file, char *fileName);
+void delete_parser_resp(TParserResp *resp);
