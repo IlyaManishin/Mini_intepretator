@@ -5,8 +5,8 @@
 #include "ast_parser_api.h"
 #include "ast_types.h"
 
-#include "ast.h"
 #include "../parser.h"
+#include "ast.h"
 
 static TNode *statements_rule(TAstParser *p);
 static TNode *statement_rule(TAstParser *p);
@@ -37,7 +37,7 @@ static TNode *statements_rule(TAstParser *p)
         return NULL;
     // TDataArena* arena = get_parser_arena(p);
     // TStatements *statements = init_statements_node(p, );
-    TStatements* statements = NULL;
+    TStatements *statements = NULL;
     if (statements == NULL)
     {
         set_memory_crit_error(p);

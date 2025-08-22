@@ -5,9 +5,9 @@
 #include "ast_parser_api.h"
 #include "system_tools.h"
 
-#include "parser.h"
 #include "ast/ast_api.h"
 #include "lexer/tokenizer_api.h"
+#include "parser.h"
 
 void delete_ast_parser(TAstParser *parser)
 {
@@ -35,10 +35,17 @@ TAstParser *ast_parser_from_file_data(TFileData fileData)
     if (parser == NULL)
         return NULL;
 
+    parser->critErr = init_crit_error();
+    if (parser->critErr == NULL)
+    {
+        delete_ast_parser(parser);
+        return NULL;
+    }
+
     parser->errors = init_errors(fileData);
     if (parser->errors == NULL)
     {
-        delete_ast_parser(parser);
+        set_memory_crit_error(parser);
         return NULL;
     }
 
@@ -55,9 +62,8 @@ TAstParser *ast_parser_from_file_data(TFileData fileData)
 
 void run_ast_parser(TAstParser *parser)
 {
-    assert(is_critical_error(parser));
-
-
+    assert(!is_critical_error(parser));
+    read_ast(parser);
 }
 
 TDataArena *get_parser_arena(TAstParser *parser)

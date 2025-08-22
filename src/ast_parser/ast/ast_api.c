@@ -4,9 +4,9 @@
 #include "ast_types.h"
 #include "data_arena.h"
 
-#include "ast.h"
-#include "../parser.h"
 #include "../lexer/tokenizer_api.h"
+#include "../parser.h"
+#include "ast.h"
 
 static TAst *init_ast()
 {
@@ -28,7 +28,8 @@ static TAst *init_ast()
 void read_ast(TAstParser *parser)
 {
     parser->ast = init_ast();
-    if (parser->ast == NULL){
+    if (parser->ast == NULL)
+    {
         set_memory_crit_error(parser);
         return;
     }

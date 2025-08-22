@@ -63,8 +63,10 @@ TParserResp *run_ast_parser_from_file(FILE *file, char *fileName)
     }
 
     TParserResp *resp = init_empty_parser_resp();
-    if (resp == NULL)
+    if (resp == NULL){
+        delete_file_data(fileData);
         return NULL;
+    }
 
     TAstParser *parser = ast_parser_from_file_data(fileData);
     if (parser == NULL)
