@@ -9,33 +9,7 @@
 
 #include "token.h"
 
-typedef enum TokenizerStates
-{
-    NEW_LINE_STATE,
-    INSIDE_LINE_STATE,
-    EOF_STATE,
-} TokenizerStates;
-
-typedef struct TTokenBuffer TTokenBuffer;
-
-typedef struct TTokenizer
-{
-    const char *start;
-    const char *cur;
-    const char *curLine; // start of code or after \n
-    int lineno;
-    const char *end;
-
-    TokenizerStates state;
-    int curIndent;
-    int newIndent;
-
-    int curBufPos; // offset from left of buffer, need for lookahead
-    TTokenBuffer *tokensBuf;
-
-    bool isError;
-    TTokenizerError tokError;
-} TTokenizer;
+typedef struct TTokenizer TTokenizer;
 
 TTokenizer *tokenizer_from_file_data(TFileData fileData);
 void delete_tokenizer(TTokenizer *tokenizer);
