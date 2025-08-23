@@ -36,8 +36,8 @@ typedef struct TNode
         TStatement statement;
     } nodeValue;
 
-    int line;
-    int column;
+    int lineno;
+    int col;
 } TNode;
 
 typedef struct TAst

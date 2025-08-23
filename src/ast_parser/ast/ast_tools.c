@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +39,12 @@ bool lookahead(TAstParser *p, TokenTypes checkType)
     return false;
 }
 
-TNode *get_node(TDataArena *arena, TToken curToken, NodeTypes type)
+static TToken read_token(TAstParser *p)
+{
+    return token_soft_read(p->tokenizer);
+}
+
+static TNode *get_node(TDataArena *arena, NodeTypes type)
 {
     TNode *node = (TNode *)arena_malloc(arena, sizeof(TNode));
     if (node == NULL)
@@ -52,21 +58,72 @@ void delete_node(TDataArena *arena, TNode *node)
     arena_free(arena, node);
 }
 
-TNode *init_statements_node(TDataArena *arena, TToken curToken)
+static char *copy_token_str(TDataArena *arena, TToken token, size_t *lengthDest)
 {
-    TNode *node = get_node(arena, curToken, STATEMENTS_TYPE);
+    size_t length = token_strlen(token);
+    assert(length != 0);
+
+    char *res = (char *)arena_malloc(arena, length + 1);
+    if (res == NULL)
+        return NULL;
+
+    memcpy(res, token.start, length);
+    res[length] = '\0'; // need?
+    if (lengthDest != NULL)
+        *lengthDest = length;
+    return res;
+}
+
+TNode *read_ident(TAstParser *p)
+{
+    int pos = get_tokenizer_pos(p->tokenizer);
+    TToken token = read_token(p);
+    if (token.type != IDENT || is_bool_ident(token))
+    {
+        set_tokenizer_pos(p->tokenizer, pos);
+        return NULL;
+    }
+
+    TDataArena *arena = get_parser_arena(p);
+    TNode *node = get_node(arena, LITERAL_TYPE);
+    if (node == NULL)
+    {
+        goto memory_error;
+    }
+    size_t identLength;
+    char *identName = copy_token_str(arena, token, &identLength);
+    if (identName == NULL)
+        goto memory_error;
+
+    TString *asString = &node->nodeValue.literal.string;
+    asString->data = identName;
+    asString->length = identLength;
+    return node;
+
+memory_error:
+    set_memory_crit_error(p);
+    set_tokenizer_pos(p->tokenizer, pos);
+    return NULL;
+}
+
+bool check_ident_string(TToken ident, char *str)
+{
+    size_t checkLength = nsu_strnlen(str, MAX_STRNLEN);
+    size_t identLength = token_strlen(ident);
+    if (checkLength != identLength)
+        return false;
+
+    return strncmp(ident.start, str, checkLength) == 0;
+}
+
+TNode *init_statements_node(TDataArena *arena, TNode **statements, int length)
+{
+    TNode *node = get_node(arena, STATEMENTS_TYPE);
     if (node == NULL)
         return NULL;
 
     TStatements *nodeValuePtr = &node->nodeValue.statements;
-    nodeValuePtr->statementsArr = arena_malloc(arena, BASE_STATETEMENTS_SIZE * sizeof(TStatement));
-    if (nodeValuePtr->statementsArr == NULL)
-    {
-        delete_node(arena, node);
-        return NULL;
-    }
-
-    nodeValuePtr->capacity = BASE_STATETEMENTS_SIZE;
-    nodeValuePtr->length = 0;
+    nodeValuePtr->statementsArr = statements;
+    nodeValuePtr->length = length;
     return node;
 }

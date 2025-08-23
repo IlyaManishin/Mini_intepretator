@@ -59,26 +59,10 @@ TTokenizerError get_tokenizer_error(TTokenizer *tokenizer)
     return tokenizer->tokError;
 }
 
-// TToken get_token(TTokenizer *tokenizer)
-// {
-//     if (get_token_buffer_length(tokenizer->tokensBuf) == 0)
-//     {
-//         return read_new_token(tokenizer);
-//     }
-//     return pop_token_from_buf(tokenizer->tokensBuf);
-// }
-
-// void back_token(TTokenizer *tokenizer, TToken token)
-// {
-//     if (is_tokenizer_error(tokenizer))
-//         return;
-
-//     int r = append_token(tokenizer->tokensBuf, token);
-//     if (r == 0)
-//     {
-//         set_base_tokenizer_error(tokenizer, "Memory limit exceded");
-//     }
-// }
+size_t token_strlen(TToken token)
+{
+    return token.end - token.start;
+}
 
 TToken token_soft_read(TTokenizer *tokenizer)
 {
@@ -95,7 +79,7 @@ TToken token_soft_read(TTokenizer *tokenizer)
         return token;
     }
 
-    //append only correct tokens
+    // append only correct tokens
     int r = append_token_to_buf(tokenizer->tokensBuf, token);
     tokenizer->curBufPos++;
     if (!r)

@@ -1,11 +1,17 @@
 #pragma once
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+enum ClibSettings
+{
+    MAX_STRNLEN = 1028,
+    MAX_STRNCMP = 1028
+};
 
 typedef struct TFileData
 {
-    char* str;
+    char *str;
     size_t dataSize;
 } TFileData;
 

@@ -22,6 +22,8 @@ static TNode *number_rule(TAstParser *p);
 static TNode *string_rule(TAstParser *p);
 static TNode *ident_rule(TAstParser *p);
 
+// if we can read rule => flush tokens
+
 TNode *file_rule(TAstParser *p)
 {
     if (is_critical_error(p))
@@ -36,17 +38,42 @@ static TNode *statements_rule(TAstParser *p)
     if (is_critical_error(p))
         return NULL;
 
-    TDataArena* arena = get_parser_arena(p);
+    TDataArena *arena = get_parser_arena(p);
 
-    int curPos = get_tokenizer_pos(p->tokenizer);
-    TStatements *statements = NULL;
-    // TStatements *statements = init_statements_node(p, );
-    if (statements == NULL)
+    size_t length = 0;
+    size_t capacity = BASE_STATETEMENTS_SIZE;
+    TNode **statements = (TNode **)arena_malloc(arena, capacity * sizeof(TNode *));
+
+    TNode *statement = NULL;
+    while ((statement = statement_rule(p)))
+    {
+        if (length == capacity)
+        {
+            size_t newCapacity = 2 * capacity;
+            TNode **newStatements = (TNode **)arena_realloc(arena, statements, capacity * sizeof(TNode *), newCapacity * sizeof(TNode *));
+            if (newStatements == NULL)
+            {
+                set_memory_crit_error(p);
+                break;
+            }
+            statements = newStatements;
+            capacity = newCapacity;
+        }
+        statements[length++] = statement;
+    }
+    if (length == 0)
+    {
+        arena_free(arena, statements);
+        return NULL;
+    }
+    TNode *statementsNode = init_statements_node(arena, statements, length);
+    if (statementsNode == NULL)
     {
         set_memory_crit_error(p);
         return NULL;
     }
 
+    flush_used_tokens(p->tokenizer);
     return NULL;
 }
 
@@ -54,17 +81,42 @@ static TNode *statement_rule(TAstParser *p)
 {
     if (is_critical_error(p))
         return NULL;
-    return NULL;
+
+    int curPos = get_tokenizer_pos(p->tokenizer);
+
+    TNode *statement;
+    if ((statement = assign_rule(p)))
+    {
+        goto done;
+    }
+    if ((statement = func_run_rule(p)))
+    {
+        goto done;
+    }
+    set_tokenizer_pos(p->tokenizer, curPos);
+
+done:
+    flush_used_tokens(p->tokenizer);
+    return statement;
 }
 
 static TNode *assign_rule(TAstParser *p)
 {
     if (is_critical_error(p))
         return NULL;
+
+    TNode *ident, expr;
     return NULL;
 }
 
 static TNode *func_run_rule(TAstParser *p)
+{
+    if (is_critical_error(p))
+        return NULL;
+    return NULL;
+}
+
+static TNode *read_args_rule(TAstParser *p)
 {
     if (is_critical_error(p))
         return NULL;

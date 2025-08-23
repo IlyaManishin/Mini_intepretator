@@ -1,0 +1,2 @@
+1. check buffer working
+2. check ident reading

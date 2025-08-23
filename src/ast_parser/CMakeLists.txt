@@ -9,6 +9,7 @@ add_library(lexer STATIC
 
 add_library(ast STATIC
     ${AST_PATH}/ast_rules.c
+    ${AST_PATH}/literals.c
     ${AST_PATH}/ast_api.c
     ${AST_PATH}/ast_tools.c
 )

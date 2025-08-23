@@ -36,7 +36,8 @@ typedef struct TString
     size_t length;
 } TString;
 
-typedef struct TBool{
+typedef struct TBool
+{
     bool value;
 } Tbool;
 
@@ -47,7 +48,7 @@ typedef struct TLiteral
     {
         TNumber number;
         TString string;
-        Tbool boolLiteral;
+        Tbool boolLit;
     };
 
 } TLiteral;

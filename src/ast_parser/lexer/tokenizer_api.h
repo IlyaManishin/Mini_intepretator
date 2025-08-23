@@ -6,6 +6,7 @@
 
 #include "syntax_errors.h"
 #include "system_tools.h"
+
 #include "token.h"
 
 typedef enum TokenizerStates
@@ -50,3 +51,5 @@ void flush_used_tokens(TTokenizer *tokenizer);
 int get_tokenizer_pos(TTokenizer *tokenizer);
 void set_tokenizer_pos(TTokenizer *tokenizer, int pos);
 int rewind_tokenizer_pos(TTokenizer *tokenizer);
+
+size_t token_strlen(TToken token);
