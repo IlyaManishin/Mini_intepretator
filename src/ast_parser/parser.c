@@ -37,7 +37,7 @@ TAstParser *ast_parser_from_file_data(TFileData fileData, TParserErrors *errors,
     TAstParser *parser = init_parser();
     if (parser == NULL)
         return NULL;
-    
+
     parser->tokenizer = tokenizer_from_file_data(fileData);
     if (parser->tokenizer == NULL)
     {

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <string.h>
 
 #include "token_buffer.h"
 #include "tokenizer.h"
@@ -61,7 +62,20 @@ TTokenizerError get_tokenizer_error(TTokenizer *tokenizer)
 
 size_t token_strlen(TToken token)
 {
-    return token.end - token.start;
+    if (token.end <= token.start)
+        return 0;
+    size_t res = token.end - token.start;
+    return res;
+}
+
+bool check_token_str(TToken token, const char *str)
+{
+    size_t strLength = nsu_strnlen(str, MAX_STRNLEN);
+    size_t tokenLength = token_strlen(token);
+    if (strLength != tokenLength)
+        return false;
+
+    return strncmp(token.start, str, strLength) == 0;
 }
 
 TToken token_soft_read(TTokenizer *tokenizer)

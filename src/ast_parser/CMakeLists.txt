@@ -6,6 +6,7 @@ add_library(lexer STATIC
     ${LEXER_PATH}/tokenizer.c
     ${LEXER_PATH}/tokenizer_api.c
 )
+target_link_libraries(lexer PRIVATE system_tools utils)
 
 add_library(ast STATIC
     ${AST_PATH}/ast_rules.c
@@ -13,7 +14,6 @@ add_library(ast STATIC
     ${AST_PATH}/ast_api.c
     ${AST_PATH}/ast_tools.c
 )
-
 
 add_library(ast_parser STATIC
     parser.c

@@ -263,5 +263,5 @@ void run_tokens_read_tests()
     passedCount += run_test(test6);
 
 
-    printf("PASSED: %d/%d\n", passedCount, testIndex - 1);
+    printf("=== Tokens read_tests, %d/%d PASSED ===\n", passedCount, testIndex - 1);
 }

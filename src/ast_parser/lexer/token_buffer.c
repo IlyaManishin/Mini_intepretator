@@ -5,6 +5,13 @@
 
 #include "token_buffer.h"
 
+typedef struct TTokenBuffer
+{
+    TToken *data;
+    int left, right;
+    int capacity;
+} TTokenBuffer; 
+
 TTokenBuffer *get_token_buf()
 {
     TTokenBuffer *buf = (TTokenBuffer *)malloc(sizeof(TTokenBuffer));
@@ -36,22 +43,41 @@ static int buf_mod(TTokenBuffer *buf, int value)
 
 static int increase_buf(TTokenBuffer *buf)
 {
-    int new_capacity = buf->capacity * 2;
-    TToken* newData = (TToken *)realloc(buf->data, sizeof(TToken) * new_capacity);
+    // int new_capacity = buf->capacity * 2;
+    // TToken* newData = (TToken *)realloc(buf->data, sizeof(TToken) * new_capacity);
+    // if (newData == NULL)
+    //     return 0;
+
+    // buf->data = newData;
+    // if (buf->left >= buf->right)
+    // {
+    //     for (int i = 0; i < buf->right; i++)
+    //     {
+    //         buf->data[buf->capacity + i] = buf->data[i];
+    //     }
+    //     buf->right = buf->capacity + buf->right;
+    // }
+    // buf->capacity = new_capacity;
+    // return 1;
+    int old_cap = buf->capacity;
+    int new_cap = old_cap * 2;
+
+    TToken *newData = (TToken *)malloc(sizeof(TToken) * new_cap);
     if (newData == NULL)
         return 0;
 
+    int len = get_buf_length(buf);
+    // скопировать в логическом порядке
+    for (int i = 0; i < len; ++i)
+        newData[i] = buf->data[(buf->left + i) % old_cap];
+
+    free(buf->data);
     buf->data = newData;
-    if (buf->left >= buf->right)
-    {
-        for (int i = 0; i < buf->right; i++)
-        {
-            buf->data[buf->capacity + i] = buf->data[i];
-        }
-        buf->right = buf->capacity + buf->right;
-    }
-    buf->capacity = new_capacity;
+    buf->capacity = new_cap;
+    buf->left = 0;
+    buf->right = len;
     return 1;
+
 }
 
 int append_token_to_buf(TTokenBuffer *buf, TToken token)

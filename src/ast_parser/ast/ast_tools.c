@@ -106,16 +106,6 @@ memory_error:
     return NULL;
 }
 
-bool check_ident_string(TToken ident, char *str)
-{
-    size_t checkLength = nsu_strnlen(str, MAX_STRNLEN);
-    size_t identLength = token_strlen(ident);
-    if (checkLength != identLength)
-        return false;
-
-    return strncmp(ident.start, str, checkLength) == 0;
-}
-
 TNode *init_statements_node(TDataArena *arena, TNode **statements, int length)
 {
     TNode *node = get_node(arena, STATEMENTS_TYPE);

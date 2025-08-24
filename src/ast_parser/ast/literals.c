@@ -14,7 +14,7 @@
 bool is_bool_ident(TToken ident)
 {
     assert(ident.type == IDENT);
-    if (check_ident_string(ident, "False") || check_ident_string(ident, "True"))
+    if (check_token_str(ident, "False") || check_token_str(ident, "True"))
         return true;
     return false;
 }

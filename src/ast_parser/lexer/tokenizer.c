@@ -156,7 +156,7 @@ static TToken make_token(TTokenizer *tokenizer, TokenTypes type)
     token.start = tokenizer->start;
     token.end = tokenizer->cur;
 
-    token.col = tokenizer->start - tokenizer->curLine; //need to test
+    token.col = tokenizer->start - tokenizer->curLine; // need to test
     if (token.col < 0)
         token.col = 0;
     token.lineno = tokenizer->lineno;

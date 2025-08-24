@@ -1,6 +1,7 @@
 add_executable(lexer_tests
-    tests_run.c
+    program.c
     tokens_read_tests.c
+    buffer_tests.c
 )
 
 target_link_libraries(lexer_tests PRIVATE ast_parser system_tools utils)

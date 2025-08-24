@@ -4,12 +4,9 @@
 
 #define BASE_SIZE 128
 
-typedef struct TTokenBuffer
-{
-    TToken *data;
-    int left, right;
-    int capacity;
-} TTokenBuffer;
+//incaplusate!!!
+
+typedef struct TTokenBuffer TTokenBuffer;
 
 TTokenBuffer *get_token_buf();
 void delete_token_buf(TTokenBuffer *buf);
