@@ -11,6 +11,7 @@ TNode *file_rule(TAstParser *p);
 bool lookahead(TAstParser *p, TokenTypes checkType);
 
 TNode *init_statements_node(TDataArena *arena, TNode **statements, int length);
+TNode *init_bin_op_node(TDataArena *arena, OperationTypes opType, TNode *left, TNode *right);
 
-bool check_ident_string(TToken ident, char *str);
+TNode *read_ident(TAstParser *p);
 bool is_bool_ident(TToken ident);

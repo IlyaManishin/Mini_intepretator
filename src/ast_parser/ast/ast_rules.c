@@ -8,6 +8,15 @@
 #include "../parser.h"
 #include "ast.h"
 
+#define RULE_PREFIX()         \
+    if (is_critical_error(p)) \
+        return NULL;
+
+#define DONE_RULE_POSTFIX()          \
+    done:                            \
+    flush_used_tokens(p->tokenizer); \
+    return res;
+
 static TNode *statements_rule(TAstParser *p);
 static TNode *statement_rule(TAstParser *p);
 static TNode *assign_rule(TAstParser *p);
@@ -105,15 +114,32 @@ static TNode *assign_rule(TAstParser *p)
     if (is_critical_error(p))
         return NULL;
 
-    TNode *ident, expr;
-    return NULL;
+    TDataArena *arena = get_parser_arena(p);
+
+    TNode *res = NULL;
+    TNode *ident, *expr;
+
+    if ((ident = read_ident(p)) &&
+        lookahead(p, ASSIGN) &&
+        (expr = expr_rule(p)))
+    {
+        res = init_bin_op_node(arena, OP_ASSIGN, ident, expr);
+        goto done;
+    }
+
+done:
+    flush_used_tokens(p->tokenizer);
+    return res;
 }
 
 static TNode *func_run_rule(TAstParser *p)
 {
     if (is_critical_error(p))
         return NULL;
-    return NULL;
+    TNode *res = NULL;
+    TNode* func, args;
+
+    DONE_RULE_POSTFIX()
 }
 
 static TNode *read_args_rule(TAstParser *p)

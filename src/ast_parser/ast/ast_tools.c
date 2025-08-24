@@ -117,3 +117,17 @@ TNode *init_statements_node(TDataArena *arena, TNode **statements, int length)
     nodeValuePtr->length = length;
     return node;
 }
+
+TNode *init_bin_op_node(TDataArena *arena, OperationTypes opType, TNode *left, TNode *right)
+{
+    TNode *node = get_node(arena, OP_TYPE);
+    if (node == NULL)
+        return NULL;
+
+    TOperation *asOperation = &node->nodeValue.op;
+    asOperation->type = opType;
+    asOperation->left = left;
+    asOperation->right = right;
+
+    return node;
+}
